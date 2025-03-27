@@ -1,0 +1,171 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	:root {
+		--background: 48 100% 97%;
+		--foreground: 20 10% 15%;
+		--card: 0 0% 100%;
+		--card-foreground: 20 10% 15%;
+		--popover: 0 0% 100%;
+		--popover-foreground: 20 10% 15%;
+		--primary: 35 100% 50%;
+		--primary-foreground: 20 10% 15%;
+		--secondary: 35 100% 96%;
+		--secondary-foreground: 20 10% 15%;
+		--muted: 35 100% 96%;
+		--muted-foreground: 25 5% 45%;
+		--accent: 35 100% 96%;
+		--accent-foreground: 20 10% 15%;
+		--destructive: 0 84.2% 60.2%;
+		--destructive-foreground: 0 0% 100%;
+		--border: 30 10% 90%;
+		--input: 30 10% 90%;
+		--ring: 35 100% 50%;
+		--radius: 0.75rem;
+	}
+
+	.dark {
+		--background: 20 10% 10%;
+		--foreground: 35 40% 95%;
+		--card: 20 10% 10%;
+		--card-foreground: 35 40% 95%;
+		--popover: 20 10% 10%;
+		--popover-foreground: 35 40% 95%;
+		--primary: 35 100% 50%;
+		--primary-foreground: 20 10% 15%;
+		--secondary: 20 5% 15%;
+		--secondary-foreground: 35 40% 95%;
+		--muted: 20 5% 15%;
+		--muted-foreground: 35 10% 70%;
+		--accent: 20 5% 15%;
+		--accent-foreground: 35 40% 95%;
+		--destructive: 0 62.8% 30.6%;
+		--destructive-foreground: 35 40% 95%;
+		--border: 20 5% 15%;
+		--input: 20 5% 15%;
+		--ring: 35 100% 50%;
+	}
+}
+
+@layer base {
+	* {
+		@apply border-border;
+	}
+	body {
+		@apply bg-background text-foreground;
+	}
+}
+
+.gradient-bg {
+	background: linear-gradient(
+		135deg,
+		hsl(48, 100%, 97%) 0%,
+		hsl(40, 100%, 95%) 100%
+	);
+}
+
+.card-gradient {
+	background: linear-gradient(135deg, #ffffff 0%, #fffaf0 100%);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+}
+
+.token-icon {
+	background: linear-gradient(135deg, #fffaf0 0%, #fff8e6 100%);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.glass-effect {
+	background: rgba(255, 255, 255, 0.8);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.swap-button {
+	background: linear-gradient(90deg, #ffb347 0%, #ffcc33 100%);
+	box-shadow: 0 4px 12px rgba(255, 179, 71, 0.25);
+	transition: all 0.3s ease;
+}
+
+.swap-button:hover {
+	box-shadow: 0 6px 16px rgba(255, 179, 71, 0.35);
+	transform: translateY(-1px);
+}
+
+.swap-button:active {
+	box-shadow: 0 2px 8px rgba(255, 179, 71, 0.2);
+	transform: translateY(1px);
+}
+
+.token-selector-item {
+	transition: all 0.2s ease;
+}
+
+.token-selector-item:hover {
+	background: #fffbeb;
+	transform: translateX(2px);
+}
+
+.positions-table {
+	border-collapse: separate;
+	border-spacing: 0;
+}
+
+.positions-table th,
+.positions-table td {
+	border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.positions-table tr:last-child td {
+	border-bottom: none;
+}
+
+.positions-table th:first-child {
+	border-top-left-radius: var(--radius);
+}
+
+.positions-table th:last-child {
+	border-top-right-radius: var(--radius);
+}
+
+.positions-table tr:last-child td:first-child {
+	border-bottom-left-radius: var(--radius);
+}
+
+.positions-table tr:last-child td:last-child {
+	border-bottom-right-radius: var(--radius);
+}
+
+.slippage-preset {
+	transition: all 0.2s ease;
+}
+
+.slippage-preset:hover {
+	background-color: rgba(255, 179, 71, 0.1);
+}
+
+.slippage-preset.active {
+	background-color: rgba(255, 179, 71, 0.2);
+	color: hsl(35, 100%, 45%);
+	font-weight: 500;
+}
+
+.keyboard-nav-item:focus {
+	outline: 2px solid hsl(35, 100%, 50%);
+	background-color: rgba(255, 179, 71, 0.1);
+}
+
+.fade-in {
+	animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
