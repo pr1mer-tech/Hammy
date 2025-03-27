@@ -103,7 +103,7 @@ export function TokenInput({
 					<span className="font-medium text-amber-800">
 						{token.symbol}
 					</span>
-					<ChevronDown className="h-4 w-4 text-amber-400" />
+					<ChevronDown className="h-4 w-4 text-amber-400 mr-2" />
 				</Button>
 				{isLoading ? (
 					<Skeleton className="h-10 w-full" />

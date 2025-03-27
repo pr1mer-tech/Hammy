@@ -27,13 +27,19 @@ export function SwapContainer() {
 	const [amountTo, setAmountTo] = useState("");
 	const [slippage, setSlippage] = useState(0.5);
 	const [settingsOpen, setSettingsOpen] = useState(false);
+	const [activeInput, setActiveInput] = useState<"from" | "to">("from");
 
 	// Custom hooks
 	const {
 		price,
 		isLoading: isPriceLoading,
 		error: priceError,
-	} = useTokenPrice(tokenFrom, tokenTo, amountFrom);
+	} = useTokenPrice(
+		tokenFrom,
+		tokenTo,
+		activeInput === "from" ? amountFrom : amountTo,
+		activeInput,
+	);
 	const {
 		needsApproval,
 		isApproving,
@@ -51,20 +57,32 @@ export function SwapContainer() {
 	// Combine all errors
 	const error = priceError || approvalError || swapError;
 
-	// Update amountTo when price changes
+	// Update amounts when price changes
 	useEffect(() => {
-		if (amountFrom && price) {
+		if (isPriceLoading) return;
+
+		if (activeInput === "from" && amountFrom && price) {
 			setAmountTo(price);
-		} else if (!amountFrom) {
-			setAmountTo("");
+		} else if (activeInput === "to" && amountTo && price) {
+			setAmountFrom(price);
 		}
-	}, [amountFrom, price]);
+	}, [activeInput, amountFrom, amountTo, price, isPriceLoading]);
 
 	// Handle amount from change
 	const handleAmountFromChange = (value: string) => {
+		setActiveInput("from");
 		setAmountFrom(value);
 		if (!value || Number.parseFloat(value) === 0) {
 			setAmountTo("");
+		}
+	};
+
+	// Handle amount to change
+	const handleAmountToChange = (value: string) => {
+		setActiveInput("to");
+		setAmountTo(value);
+		if (!value || Number.parseFloat(value) === 0) {
+			setAmountFrom("");
 		}
 	};
 
@@ -156,6 +174,7 @@ export function SwapContainer() {
 						token={tokenFrom}
 						onSelectToken={handleTokenFromSelect}
 						label="From"
+						isLoading={activeInput === "to" && isPriceLoading}
 					/>
 
 					<div className="flex justify-center my-1">
@@ -171,11 +190,11 @@ export function SwapContainer() {
 
 					<TokenInput
 						value={amountTo}
-						onChange={setAmountTo}
+						onChange={handleAmountToChange}
 						token={tokenTo}
 						onSelectToken={handleTokenToSelect}
 						label="To (estimated)"
-						isLoading={isPriceLoading}
+						isLoading={activeInput === "from" && isPriceLoading}
 					/>
 
 					<div className="pt-3">
