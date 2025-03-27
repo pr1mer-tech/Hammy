@@ -22,14 +22,14 @@ const nextConfig = {
 		parallelServerCompiles: true,
 	},
 	webpack: (config) => {
-		config.resolve.fallback = { fs: false };
-		config.externals.push(
-			"pino-pretty",
-			"lokijs",
-			"encoding",
-			"bufferutil",
-			"utf-8-validate",
-		);
+		// config.resolve.fallback = { fs: false };
+		// config.externals.push(
+		// 	"pino-pretty",
+		// 	"lokijs",
+		// 	"encoding",
+		// 	"bufferutil",
+		// 	"utf-8-validate",
+		// );
 
 		return config;
 	},
