@@ -26,13 +26,34 @@ const nextConfig = {
 		// config.externals.push(
 		// 	"pino-pretty",
 		// 	"lokijs",
-		// 	"encoding",
-		// 	"bufferutil",
-		// 	"utf-8-validate",
+		//  	"encoding",
+		//  	"bufferutil",
+		//  	"utf-8-validate",
 		// );
 
 		return config;
 	},
+
+	// PostHog rewrites
+	async rewrites() {
+		return [
+			{
+				source: "/ingest/static/:path*",
+				destination: "https://eu-assets.i.posthog.com/static/:path*",
+			},
+			{
+				source: "/ingest/:path*",
+				destination: "https://eu.i.posthog.com/:path*",
+			},
+			{
+				source: "/ingest/decide",
+				destination: "https://eu.i.posthog.com/decide",
+			},
+		];
+	},
+
+	// This is required to support PostHog trailing slash API requests
+	skipTrailingSlashRedirect: true,
 };
 
 mergeConfig(nextConfig, userConfig);
@@ -45,7 +66,7 @@ function mergeConfig(nextConfig, userConfig) {
 	for (const key in userConfig) {
 		if (
 			typeof nextConfig[key] === "object" &&
-			!Array.isArray(nextConfig[key])
+				!Array.isArray(nextConfig[key])
 		) {
 			nextConfig[key] = {
 				...nextConfig[key],

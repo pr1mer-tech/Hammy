@@ -1,6 +1,7 @@
 import type React from "react";
 import { Inter } from "next/font/google";
 import { Providers } from "@/providers/providers";
+import { PostHogProvider } from "@/components/PostHogProvider";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import "@/app/globals.css";
@@ -21,14 +22,17 @@ export default function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body className={`${inter.className} gradient-bg min-h-screen`}>
-				<Providers>
-					<div className="flex flex-col min-h-screen">
-						<Header />
-						<main className="flex-1 container mx-auto px-4 py-6">
-							{children}
-						</main>
-					</div>
-				</Providers>
+				<PostHogProvider>
+					<Providers>
+						<div className="flex flex-col min-h-screen">
+							<Header />
+							<main className="flex-1 container mx-auto px-4 py-6">
+								{children}
+							</main>
+							<Footer />
+						</div>
+					</Providers>
+				</PostHogProvider>
 			</body>
 		</html>
 	);
