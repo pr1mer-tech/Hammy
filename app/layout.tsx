@@ -9,9 +9,8 @@ import "@/app/globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-	title: "Hammy Swap - Uniswap V2 Interface",
-	description: "An alternative interface for Uniswap V2 on Ethereum mainnet",
-	generator: "v0.dev",
+	title: "Hammy Swap",
+	description: "An XRPL EVM decentrlaized exchange based on Uniswap V2",
 };
 
 export default function RootLayout({
