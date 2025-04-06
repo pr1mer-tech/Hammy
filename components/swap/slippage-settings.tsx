@@ -105,7 +105,7 @@ export function SlippageSettings({
 							<div className="relative flex-1">
 								<Input
 									type="text"
-									value={isCustom ? customSlippage : ""}
+									value={slippage}
 									onChange={handleCustomSlippageChange}
 									placeholder="Custom"
 									className={`pr-8 ${isCustom ? "border-amber-400 ring-1 ring-amber-400" : ""}`}

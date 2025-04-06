@@ -21,7 +21,7 @@ export function Header() {
 					<Link href="/" className="flex items-center gap-2">
 						{/* <HamsterIcon className="h-8 w-8 text-amber-500" /> */}
 						<span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-orange-500">
-							Hammy Swap
+							🐹 Hammy Swap
 						</span>
 					</Link>
 					<nav className="hidden md:flex items-center space-x-6">
