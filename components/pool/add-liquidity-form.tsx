@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { TokenInput } from "@/components/swap/token-input";
 import type { TokenData } from "@/types/token";
 import { Plus } from "lucide-react";
-import { useAccount, useWriteContract } from "wagmi";
-import { UNISWAP_V2_ROUTER, UNISWAP_V2_ROUTER_ABI } from "@/lib/constants";
-import { parseUnits, zeroAddress } from "viem";
+import { useAccount, useWriteContract, useReadContract } from "wagmi";
+import { UNISWAP_V2_ROUTER, UNISWAP_V2_ROUTER_ABI, UNISWAP_V2_FACTORY, UNISWAP_V2_FACTORY_ABI, UNISWAP_V2_PAIR_ABI, WETH_ADDRESS } from "@/lib/constants";
+import { parseUnits, zeroAddress, formatUnits } from "viem";
 import { useModal } from "connectkit";
 import { useTokenPrice } from "@/hooks/use-token-price";
 import { useTokenAllowance } from "@/hooks/use-token-allowance";
@@ -33,6 +33,7 @@ export function AddLiquidityForm({
 	const [amountB, setAmountB] = useState("");
 	const [isAddingLiquidity, setIsAddingLiquidity] = useState(false);
 	const [activeInput, setActiveInput] = useState<"a" | "b">("a");
+	const [poolShare, setPoolShare] = useState<string>("0");
 
 	// Custom hooks for price calculation
 	// When user inputs token A amount, we calculate token B amount
@@ -62,6 +63,102 @@ export function AddLiquidityForm({
 	} = useTokenAllowance(tokenB, amountB);
 
 	const { writeContractAsync: writeContract } = useWriteContract();
+
+	// Get effective addresses for pair lookup (replace ETH with WETH)
+	const effectiveTokenAAddress = tokenA.address === zeroAddress ? WETH_ADDRESS : tokenA.address as `0x${string}`;
+	const effectiveTokenBAddress = tokenB.address === zeroAddress ? WETH_ADDRESS : tokenB.address as `0x${string}`;
+
+	// Get pair address
+	const { data: pairAddress } = useReadContract({
+		address: UNISWAP_V2_FACTORY,
+		abi: UNISWAP_V2_FACTORY_ABI,
+		functionName: "getPair",
+		args: [effectiveTokenAAddress, effectiveTokenBAddress],
+	});
+
+	// Get reserves
+	const { data: reserves } = useReadContract({
+		address: pairAddress,
+		abi: UNISWAP_V2_PAIR_ABI,
+		functionName: "getReserves",
+		query: {
+			enabled: !!pairAddress && pairAddress !== zeroAddress,
+		}
+	});
+
+	// Get token0 for determining token order
+	const { data: token0Address } = useReadContract({
+		address: pairAddress,
+		abi: UNISWAP_V2_PAIR_ABI,
+		functionName: "token0",
+		query: {
+			enabled: !!pairAddress && pairAddress !== zeroAddress,
+		}
+	});
+
+	// Calculate pool share
+	useEffect(() => {
+		if (!amountA || !amountB || !pairAddress || pairAddress === zeroAddress) {
+			console.log({
+				amountA,
+				amountB,
+				reserves,
+				pairAddress,
+			});
+			setPoolShare("0");
+			return;
+		}
+
+		try {
+			// If reserves is undefined (new pair), user will have 100% share
+			if (!reserves) {
+				setPoolShare("100");
+				return;
+			}
+
+			const [reserve0, reserve1] = reserves as [bigint, bigint, number];
+
+			// Determine token order in the pair
+			const effectiveTokenA = tokenA.address === zeroAddress ? WETH_ADDRESS : tokenA.address;
+			const isTokenAFirst = token0Address?.toLowerCase() === effectiveTokenA.toLowerCase();
+
+			const reserveA = isTokenAFirst ? reserve0 : reserve1;
+			const reserveB = isTokenAFirst ? reserve1 : reserve0;
+
+			const parsedAmountA = parseUnits(amountA, tokenA.decimals);
+			const parsedAmountB = parseUnits(amountB, tokenB.decimals);
+
+			// If pool is empty, user will have 100% share
+			if (reserveA === 0n && reserveB === 0n) {
+				setPoolShare("100");
+				return;
+			}
+
+			// Calculate liquidity share
+			// For an existing pool: liquidity = min(amountA * totalSupply / reserveA, amountB * totalSupply / reserveB)
+			// For simplicity, we can use: min(amountA / (reserveA + amountA), amountB / (reserveB + amountB))
+			const shareA = Number(parsedAmountA) / (Number(reserveA) + Number(parsedAmountA));
+			const shareB = Number(parsedAmountB) / (Number(reserveB) + Number(parsedAmountB));
+
+			const share = Math.min(shareA, shareB) * 100;
+
+			// Debug logs to help diagnose the issue
+			console.log("Pool Share Calculation:", {
+				reserveA: Number(reserveA),
+				reserveB: Number(reserveB),
+				parsedAmountA: Number(parsedAmountA),
+				parsedAmountB: Number(parsedAmountB),
+				shareA,
+				shareB,
+				finalShare: share
+			});
+
+			setPoolShare(share.toFixed(4));
+		} catch (error) {
+			console.error("Error calculating pool share:", error);
+			setPoolShare("0");
+		}
+	}, [amountA, amountB, reserves, pairAddress, tokenA, tokenB, token0Address]);
 
 	// Update amounts when price changes
 	useEffect(() => {
@@ -159,7 +256,7 @@ export function AddLiquidityForm({
 					abi: UNISWAP_V2_ROUTER_ABI,
 					functionName: "addLiquidityETH",
 					args: [
-						token.address,
+						token.address as `0x${string}`,
 						tokenAmount,
 						tokenAmountMin,
 						ethAmountMin,
@@ -176,8 +273,8 @@ export function AddLiquidityForm({
 					abi: UNISWAP_V2_ROUTER_ABI,
 					functionName: "addLiquidity",
 					args: [
-						tokenA.address,
-						tokenB.address,
+						tokenA.address as `0x${string}`,
+						tokenB.address as `0x${string}`,
 						parsedAmountA,
 						parsedAmountB,
 						amountAMin,
@@ -297,7 +394,7 @@ export function AddLiquidityForm({
 					<div className="flex justify-between mt-1">
 						<span>Share of Pool</span>
 						<span className="font-medium text-amber-800">
-							0.01%
+							{poolShare}%
 						</span>
 					</div>
 				</div>

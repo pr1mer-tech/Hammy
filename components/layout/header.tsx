@@ -5,13 +5,15 @@ import { usePathname } from "next/navigation";
 import { ConnectKitButton } from "connectkit";
 import { cn } from "@/lib/utils";
 import { HamsterIcon } from "@/components/ui/icons";
+import Image from "next/image";
 
 export function Header() {
 	const pathname = usePathname();
 
 	const navItems = [
 		{ name: "Swap", href: "/" },
-		{ name: "Pool", href: "/pool" },
+		{ name: "Pools", href: "/pool" },
+		{ name: "Docs", href: "/docs" },
 	];
 
 	return (
@@ -20,8 +22,9 @@ export function Header() {
 				<div className="flex items-center space-x-8">
 					<Link href="/" className="flex items-center gap-2">
 						{/* <HamsterIcon className="h-8 w-8 text-amber-500" /> */}
+						<Image src="/logo.png" alt="Hammy Logo" width={32} height={32} />
 						<span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-orange-500">
-							🐹 Hammy Swap
+							Hammy Swap
 						</span>
 					</Link>
 					<nav className="hidden md:flex items-center space-x-6">
