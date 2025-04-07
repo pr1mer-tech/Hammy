@@ -4,401 +4,404 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { TokenInput } from "@/components/swap/token-input";
 import type { TokenData } from "@/types/token";
-import { Plus } from "lucide-react";
-import { useAccount, useWriteContract, useReadContract } from "wagmi";
-import { UNISWAP_V2_ROUTER, UNISWAP_V2_ROUTER_ABI, UNISWAP_V2_FACTORY, UNISWAP_V2_FACTORY_ABI, UNISWAP_V2_PAIR_ABI, WETH_ADDRESS } from "@/lib/constants";
-import { parseUnits, zeroAddress, formatUnits } from "viem";
+import { Plus, Info } from "lucide-react";
+import { useAccount, useWriteContract } from "wagmi";
+import { UNISWAP_V2_ROUTER, UNISWAP_V2_ROUTER_ABI, WETH_ADDRESS } from "@/lib/constants";
+import { parseUnits, zeroAddress } from "viem";
 import { useModal } from "connectkit";
-import { useTokenPrice } from "@/hooks/use-token-price";
 import { useTokenAllowance } from "@/hooks/use-token-allowance";
+import { usePoolExists } from "@/hooks/use-pool-exists";
+import { useProportionalAmounts } from "@/hooks/use-proportional-amounts";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface AddLiquidityFormProps {
-	tokenA: TokenData;
-	tokenB: TokenData;
-	onTokenASelect: (token: TokenData) => void;
-	onTokenBSelect: (token: TokenData) => void;
-	onError: (error: string | null) => void;
+  tokenA: TokenData;
+  tokenB: TokenData;
+  onTokenASelect: (token: TokenData) => void;
+  onTokenBSelect: (token: TokenData) => void;
+  onError: (error: string | null) => void;
 }
 
 export function AddLiquidityForm({
-	tokenA,
-	tokenB,
-	onTokenASelect,
-	onTokenBSelect,
-	onError,
+  tokenA,
+  tokenB,
+  onTokenASelect,
+  onTokenBSelect,
+  onError,
 }: AddLiquidityFormProps) {
-	const { address, isConnected } = useAccount();
-	const { setOpen } = useModal();
-	const [amountA, setAmountA] = useState("");
-	const [amountB, setAmountB] = useState("");
-	const [isAddingLiquidity, setIsAddingLiquidity] = useState(false);
-	const [activeInput, setActiveInput] = useState<"a" | "b">("a");
-	const [poolShare, setPoolShare] = useState<string>("0");
+  const { address, isConnected } = useAccount();
+  const { setOpen } = useModal();
+  const [amountA, setAmountA] = useState("");
+  const [amountB, setAmountB] = useState("");
+  const [isAddingLiquidity, setIsAddingLiquidity] = useState(false);
+  const [activeInput, setActiveInput] = useState<"a" | "b">("a");
+  const [poolShare, setPoolShare] = useState<string>("0");
 
-	// Custom hooks for price calculation
-	// When user inputs token A amount, we calculate token B amount
-	const {
-		price: priceB,
-		isLoading: isPriceBLoading,
-		error: priceBError,
-	} = useTokenPrice(tokenA, tokenB, amountA, "from");
+  // Check if pool exists
+  const { 
+    poolExists, 
+    reserves, 
+    token0Address,
+    isLoading: isPoolCheckLoading 
+  } = usePoolExists(tokenA, tokenB);
 
-	// When user inputs token B amount, we calculate token A amount
-	const {
-		price: priceA,
-		isLoading: isPriceALoading,
-		error: priceAError,
-	} = useTokenPrice(tokenB, tokenA, amountB, "from");
+  // For existing pools, calculate proportional amounts
+  const {
+    calculatedAmount: proportionalAmountB,
+    isLoading: isProportionalAmountBLoading,
+    error: proportionalAmountBError,
+  } = useProportionalAmounts(
+    tokenA, 
+    tokenB, 
+    reserves, 
+    token0Address, 
+    amountA, 
+    true
+  );
 
-	const {
-		needsApproval: needsApprovalA,
-		isApproving: isApprovingA,
-		approveToken: approveTokenA,
-	} = useTokenAllowance(tokenA, amountA);
+  const {
+    calculatedAmount: proportionalAmountA,
+    isLoading: isProportionalAmountALoading,
+    error: proportionalAmountAError,
+  } = useProportionalAmounts(
+    tokenA, 
+    tokenB, 
+    reserves, 
+    token0Address, 
+    amountB, 
+    false
+  );
 
-	const {
-		needsApproval: needsApprovalB,
-		isApproving: isApprovingB,
-		approveToken: approveTokenB,
-	} = useTokenAllowance(tokenB, amountB);
+  const {
+    needsApproval: needsApprovalA,
+    isApproving: isApprovingA,
+    approveToken: approveTokenA,
+  } = useTokenAllowance(tokenA, amountA);
 
-	const { writeContractAsync: writeContract } = useWriteContract();
+  const {
+    needsApproval: needsApprovalB,
+    isApproving: isApprovingB,
+    approveToken: approveTokenB,
+  } = useTokenAllowance(tokenB, amountB);
 
-	// Get effective addresses for pair lookup (replace ETH with WETH)
-	const effectiveTokenAAddress = tokenA.address === zeroAddress ? WETH_ADDRESS : tokenA.address as `0x${string}`;
-	const effectiveTokenBAddress = tokenB.address === zeroAddress ? WETH_ADDRESS : tokenB.address as `0x${string}`;
+  const { writeContractAsync: writeContract } = useWriteContract();
 
-	// Get pair address
-	const { data: pairAddress } = useReadContract({
-		address: UNISWAP_V2_FACTORY,
-		abi: UNISWAP_V2_FACTORY_ABI,
-		functionName: "getPair",
-		args: [effectiveTokenAAddress, effectiveTokenBAddress],
-	});
+  // Calculate pool share
+  useEffect(() => {
+    if (!amountA || !amountB) {
+      setPoolShare("0");
+      return;
+    }
 
-	// Get reserves
-	const { data: reserves } = useReadContract({
-		address: pairAddress,
-		abi: UNISWAP_V2_PAIR_ABI,
-		functionName: "getReserves",
-		query: {
-			enabled: !!pairAddress && pairAddress !== zeroAddress,
-		}
-	});
+    try {
+      // If pool doesn't exist, user will have 100% share
+      if (!poolExists || !reserves) {
+        setPoolShare("100");
+        return;
+      }
 
-	// Get token0 for determining token order
-	const { data: token0Address } = useReadContract({
-		address: pairAddress,
-		abi: UNISWAP_V2_PAIR_ABI,
-		functionName: "token0",
-		query: {
-			enabled: !!pairAddress && pairAddress !== zeroAddress,
-		}
-	});
+      const [reserve0, reserve1] = reserves;
 
-	// Calculate pool share
-	useEffect(() => {
-		if (!amountA || !amountB || !pairAddress || pairAddress === zeroAddress) {
-			console.log({
-				amountA,
-				amountB,
-				reserves,
-				pairAddress,
-			});
-			setPoolShare("0");
-			return;
-		}
+      // Determine token order in the pair
+      const effectiveTokenA = tokenA.address === zeroAddress ? WETH_ADDRESS : tokenA.address;
+      const isTokenAFirst = token0Address?.toLowerCase() === effectiveTokenA.toLowerCase();
 
-		try {
-			// If reserves is undefined (new pair), user will have 100% share
-			if (!reserves) {
-				setPoolShare("100");
-				return;
-			}
+      const reserveA = isTokenAFirst ? reserve0 : reserve1;
+      const reserveB = isTokenAFirst ? reserve1 : reserve0;
 
-			const [reserve0, reserve1] = reserves as [bigint, bigint, number];
+      const parsedAmountA = parseUnits(amountA, tokenA.decimals);
+      const parsedAmountB = parseUnits(amountB, tokenB.decimals);
 
-			// Determine token order in the pair
-			const effectiveTokenA = tokenA.address === zeroAddress ? WETH_ADDRESS : tokenA.address;
-			const isTokenAFirst = token0Address?.toLowerCase() === effectiveTokenA.toLowerCase();
+      // If pool is empty, user will have 100% share
+      if (reserveA === 0n && reserveB === 0n) {
+        setPoolShare("100");
+        return;
+      }
 
-			const reserveA = isTokenAFirst ? reserve0 : reserve1;
-			const reserveB = isTokenAFirst ? reserve1 : reserve0;
+      // Calculate liquidity share
+      // For an existing pool: min(amountA / (reserveA + amountA), amountB / (reserveB + amountB))
+      const shareA = Number(parsedAmountA) / (Number(reserveA) + Number(parsedAmountA));
+      const shareB = Number(parsedAmountB) / (Number(reserveB) + Number(parsedAmountB));
 
-			const parsedAmountA = parseUnits(amountA, tokenA.decimals);
-			const parsedAmountB = parseUnits(amountB, tokenB.decimals);
+      const share = Math.min(shareA, shareB) * 100;
+      setPoolShare(share.toFixed(4));
+    } catch (error) {
+      console.error("Error calculating pool share:", error);
+      setPoolShare("0");
+    }
+  }, [amountA, amountB, reserves, tokenA, tokenB, token0Address, poolExists]);
 
-			// If pool is empty, user will have 100% share
-			if (reserveA === 0n && reserveB === 0n) {
-				setPoolShare("100");
-				return;
-			}
+  // Update amounts for existing pools only
+  useEffect(() => {
+    if (!poolExists) return;
 
-			// Calculate liquidity share
-			// For an existing pool: liquidity = min(amountA * totalSupply / reserveA, amountB * totalSupply / reserveB)
-			// For simplicity, we can use: min(amountA / (reserveA + amountA), amountB / (reserveB + amountB))
-			const shareA = Number(parsedAmountA) / (Number(reserveA) + Number(parsedAmountA));
-			const shareB = Number(parsedAmountB) / (Number(reserveB) + Number(parsedAmountB));
+    if (activeInput === "a" && amountA && proportionalAmountB && !isProportionalAmountBLoading) {
+      setAmountB(proportionalAmountB);
+    }
+  }, [activeInput, amountA, proportionalAmountB, isProportionalAmountBLoading, poolExists]);
 
-			const share = Math.min(shareA, shareB) * 100;
+  useEffect(() => {
+    if (!poolExists) return;
 
-			// Debug logs to help diagnose the issue
-			console.log("Pool Share Calculation:", {
-				reserveA: Number(reserveA),
-				reserveB: Number(reserveB),
-				parsedAmountA: Number(parsedAmountA),
-				parsedAmountB: Number(parsedAmountB),
-				shareA,
-				shareB,
-				finalShare: share
-			});
+    if (activeInput === "b" && amountB && proportionalAmountA && !isProportionalAmountALoading) {
+      setAmountA(proportionalAmountA);
+    }
+  }, [activeInput, amountB, proportionalAmountA, isProportionalAmountALoading, poolExists]);
 
-			setPoolShare(share.toFixed(4));
-		} catch (error) {
-			console.error("Error calculating pool share:", error);
-			setPoolShare("0");
-		}
-	}, [amountA, amountB, reserves, pairAddress, tokenA, tokenB, token0Address]);
+  // Handle amount A change
+  const handleAmountAChange = (value: string) => {
+    setActiveInput("a");
+    setAmountA(value);
+    
+    // For new pools, we don't auto-update the other field
+    if (!poolExists) {
+      return;
+    }
+    
+    if (!value || Number.parseFloat(value) === 0) {
+      setAmountB("");
+    }
+  };
 
-	// Update amounts when price changes
-	useEffect(() => {
-		if (activeInput === "a" && amountA && priceB && !isPriceBLoading) {
-			setAmountB(priceB);
-		}
-	}, [activeInput, amountA, priceB, isPriceBLoading]);
+  // Handle amount B change
+  const handleAmountBChange = (value: string) => {
+    setActiveInput("b");
+    setAmountB(value);
+    
+    // For new pools, we don't auto-update the other field
+    if (!poolExists) {
+      return;
+    }
+    
+    if (!value || Number.parseFloat(value) === 0) {
+      setAmountA("");
+    }
+  };
 
-	useEffect(() => {
-		if (activeInput === "b" && amountB && priceA && !isPriceALoading) {
-			setAmountA(priceA);
-		}
-	}, [activeInput, amountB, priceA, isPriceALoading]);
+  const needsApproval = () => {
+    return needsApprovalA || needsApprovalB;
+  };
 
-	// Handle amount A change
-	const handleAmountAChange = (value: string) => {
-		setActiveInput("a");
-		setAmountA(value);
-		if (!value || Number.parseFloat(value) === 0) {
-			setAmountB("");
-		}
-	};
+  const handleApprove = async () => {
+    onError(null);
 
-	// Handle amount B change
-	const handleAmountBChange = (value: string) => {
-		setActiveInput("b");
-		setAmountB(value);
-		if (!value || Number.parseFloat(value) === 0) {
-			setAmountA("");
-		}
-	};
+    try {
+      if (needsApprovalA) {
+        await approveTokenA();
+      }
 
-	const needsApproval = () => {
-		return needsApprovalA || needsApprovalB;
-	};
+      if (needsApprovalB) {
+        await approveTokenB();
+      }
+    } catch (err) {
+      console.error("Error approving tokens:", err);
+      onError("Failed to approve tokens. Please try again.");
+    }
+  };
 
-	const handleApprove = async () => {
-		onError(null);
+  const handleAddLiquidity = async () => {
+    if (!isConnected || !address) return;
 
-		try {
-			if (needsApprovalA) {
-				await approveTokenA();
-			}
+    setIsAddingLiquidity(true);
+    onError(null);
 
-			if (needsApprovalB) {
-				await approveTokenB();
-			}
-		} catch (err) {
-			console.error("Error approving tokens:", err);
-			onError("Failed to approve tokens. Please try again.");
-		}
-	};
+    try {
+      const deadline = BigInt(Math.floor(Date.now() / 1000) + 60 * 20); // 20 minutes
+      const slippageFactor = 0.995; // 0.5% slippage
 
-	const handleAddLiquidity = async () => {
-		if (!isConnected || !address) return;
+      // Parse amounts
+      const parsedAmountA = parseUnits(amountA, tokenA.decimals);
+      const parsedAmountB = parseUnits(amountB, tokenB.decimals);
 
-		setIsAddingLiquidity(true);
-		onError(null);
+      // Calculate minimum amounts with slippage
+      const amountAMin = BigInt(Number(parsedAmountA) * slippageFactor);
+      const amountBMin = BigInt(Number(parsedAmountB) * slippageFactor);
 
-		try {
-			const deadline = BigInt(Math.floor(Date.now() / 1000) + 60 * 20); // 20 minutes
-			const slippageFactor = 0.995; // 0.5% slippage
+      // ETH + Token
+      if (
+        tokenA.address === zeroAddress ||
+        tokenB.address === zeroAddress
+      ) {
+        const ethToken =
+          tokenA.address === zeroAddress ? tokenA : tokenB;
+        const token = tokenA.address === zeroAddress ? tokenB : tokenA;
+        const ethAmount =
+          tokenA.address === zeroAddress
+            ? parsedAmountA
+            : parsedAmountB;
+        const tokenAmount =
+          tokenA.address === zeroAddress
+            ? parsedAmountB
+            : parsedAmountA;
+        const tokenAmountMin =
+          tokenA.address === zeroAddress ? amountBMin : amountAMin;
+        const ethAmountMin =
+          tokenA.address === zeroAddress ? amountAMin : amountBMin;
 
-			// Parse amounts
-			const parsedAmountA = parseUnits(amountA, tokenA.decimals);
-			const parsedAmountB = parseUnits(amountB, tokenB.decimals);
+        await writeContract({
+          address: UNISWAP_V2_ROUTER,
+          abi: UNISWAP_V2_ROUTER_ABI,
+          functionName: "addLiquidityETH",
+          args: [
+            token.address as `0x${string}`,
+            tokenAmount,
+            tokenAmountMin,
+            ethAmountMin,
+            address,
+            deadline,
+          ],
+          value: ethAmount,
+        });
+      }
+      // Token + Token
+      else {
+        await writeContract({
+          address: UNISWAP_V2_ROUTER,
+          abi: UNISWAP_V2_ROUTER_ABI,
+          functionName: "addLiquidity",
+          args: [
+            tokenA.address as `0x${string}`,
+            tokenB.address as `0x${string}`,
+            parsedAmountA,
+            parsedAmountB,
+            amountAMin,
+            amountBMin,
+            address,
+            deadline,
+          ],
+        });
+      }
 
-			// Calculate minimum amounts with slippage
-			const amountAMin = BigInt(Number(parsedAmountA) * slippageFactor);
-			const amountBMin = BigInt(Number(parsedAmountB) * slippageFactor);
+      // Reset form after successful addition
+      setAmountA("");
+      setAmountB("");
+    } catch (err) {
+      console.error("Error adding liquidity:", err);
+      onError("Failed to add liquidity. Please try again.");
+    } finally {
+      setIsAddingLiquidity(false);
+    }
+  };
 
-			// ETH + Token
-			if (
-				tokenA.address === zeroAddress ||
-				tokenB.address === zeroAddress
-			) {
-				const ethToken =
-					tokenA.address === zeroAddress ? tokenA : tokenB;
-				const token = tokenA.address === zeroAddress ? tokenB : tokenA;
-				const ethAmount =
-					tokenA.address === zeroAddress
-						? parsedAmountA
-						: parsedAmountB;
-				const tokenAmount =
-					tokenA.address === zeroAddress
-						? parsedAmountB
-						: parsedAmountA;
-				const tokenAmountMin =
-					tokenA.address === zeroAddress ? amountBMin : amountAMin;
-				const ethAmountMin =
-					tokenA.address === zeroAddress ? amountAMin : amountBMin;
+  const getAddButtonText = () => {
+    if (!isConnected) return "Connect Wallet";
+    if (!amountA || !amountB) return "Enter amounts";
+    if (tokenA.address === tokenB.address) return "Cannot add same token";
+    if (needsApproval()) return "Approve";
+    
+    if (!poolExists) {
+      return "Create pool & add liquidity";
+    }
+    
+    return "Add Liquidity";
+  };
 
-				await writeContract({
-					address: UNISWAP_V2_ROUTER,
-					abi: UNISWAP_V2_ROUTER_ABI,
-					functionName: "addLiquidityETH",
-					args: [
-						token.address as `0x${string}`,
-						tokenAmount,
-						tokenAmountMin,
-						ethAmountMin,
-						address,
-						deadline,
-					],
-					value: ethAmount,
-				});
-			}
-			// Token + Token
-			else {
-				await writeContract({
-					address: UNISWAP_V2_ROUTER,
-					abi: UNISWAP_V2_ROUTER_ABI,
-					functionName: "addLiquidity",
-					args: [
-						tokenA.address as `0x${string}`,
-						tokenB.address as `0x${string}`,
-						parsedAmountA,
-						parsedAmountB,
-						amountAMin,
-						amountBMin,
-						address,
-						deadline,
-					],
-				});
-			}
+  const handleAddButtonClick = () => {
+    if (!isConnected) {
+      setOpen(true);
+      return;
+    }
 
-			// Reset form after successful addition
-			setAmountA("");
-			setAmountB("");
-		} catch (err) {
-			console.error("Error adding liquidity:", err);
-			onError("Failed to add liquidity. Please try again.");
-		} finally {
-			setIsAddingLiquidity(false);
-		}
-	};
+    if (needsApproval()) {
+      handleApprove();
+    } else {
+      handleAddLiquidity();
+    }
+  };
 
-	const getAddButtonText = () => {
-		if (!isConnected) return "Connect Wallet";
-		if (!amountA || !amountB) return "Enter amounts";
-		if (tokenA.address === tokenB.address) return "Cannot add same token";
-		if (needsApproval()) return "Approve";
-		return "Add Liquidity";
-	};
+  const isAddButtonDisabled = () => {
+    if (!isConnected) return false;
+    if (!amountA || !amountB) return true;
+    if (tokenA.address === tokenB.address) return true;
+    if (
+      isProportionalAmountALoading ||
+      isProportionalAmountBLoading ||
+      isApprovingA ||
+      isApprovingB ||
+      isAddingLiquidity
+    )
+      return true;
+    return false;
+  };
 
-	const handleAddButtonClick = () => {
-		if (!isConnected) {
-			setOpen(true);
-			return;
-		}
+  // Combined error from calculations
+  const error = proportionalAmountAError || proportionalAmountBError;
+  useEffect(() => {
+    if (error) {
+      onError(error);
+    } else {
+      onError(null);
+    }
+  }, [error, onError]);
 
-		if (needsApproval()) {
-			handleApprove();
-		} else {
-			handleAddLiquidity();
-		}
-	};
+  return (
+    <div className="space-y-3">
+      {!isPoolCheckLoading && !poolExists && (
+        <Alert className="mb-4 bg-amber-50 border-amber-200">
+          <Info className="h-4 w-4 text-amber-500" />
+          <AlertDescription className="text-amber-800">
+            This pool doesn't exist yet. Enter the amounts for both tokens to set the initial price.
+          </AlertDescription>
+        </Alert>
+      )}
 
-	const isAddButtonDisabled = () => {
-		if (!isConnected) return false;
-		if (!amountA || !amountB) return true;
-		if (tokenA.address === tokenB.address) return true;
-		if (
-			isPriceALoading ||
-			isPriceBLoading ||
-			isApprovingA ||
-			isApprovingB ||
-			isAddingLiquidity
-		)
-			return true;
-		return false;
-	};
+      <TokenInput
+        value={amountA}
+        onChange={handleAmountAChange}
+        token={tokenA}
+        onSelectToken={onTokenASelect}
+        isLoading={activeInput === "b" && isProportionalAmountALoading && poolExists}
+      />
 
-	// Combined error from price calculations
-	const error = priceAError || priceBError;
-	useEffect(() => {
-		if (error) {
-			onError(error);
-		}
-	}, [error, onError]);
+      <div className="flex justify-center my-1">
+        <div className="rounded-full bg-amber-50 h-8 w-8 flex items-center justify-center">
+          <Plus className="h-4 w-4 text-amber-600" />
+        </div>
+      </div>
 
-	return (
-		<div className="space-y-3">
-			<TokenInput
-				value={amountA}
-				onChange={handleAmountAChange}
-				token={tokenA}
-				onSelectToken={onTokenASelect}
-				isLoading={activeInput === "b" && isPriceALoading}
-			/>
+      <TokenInput
+        value={amountB}
+        onChange={handleAmountBChange}
+        token={tokenB}
+        onSelectToken={onTokenBSelect}
+        isLoading={activeInput === "a" && isProportionalAmountBLoading && poolExists}
+      />
 
-			<div className="flex justify-center my-1">
-				<div className="rounded-full bg-amber-50 h-8 w-8 flex items-center justify-center">
-					<Plus className="h-4 w-4 text-amber-600" />
-				</div>
-			</div>
+      <div className="pt-3">
+        <Button
+          className="w-full swap-button text-amber-900 rounded-xl py-6 font-medium text-base"
+          onClick={handleAddButtonClick}
+          disabled={isAddButtonDisabled()}
+        >
+          {isApprovingA || isApprovingB
+            ? "Approving..."
+            : isAddingLiquidity
+              ? "Adding Liquidity..."
+              : getAddButtonText()}
+        </Button>
+      </div>
 
-			<TokenInput
-				value={amountB}
-				onChange={handleAmountBChange}
-				token={tokenB}
-				onSelectToken={onTokenBSelect}
-				isLoading={activeInput === "a" && isPriceBLoading}
-			/>
-
-			<div className="pt-3">
-				<Button
-					className="w-full swap-button text-amber-900 rounded-xl py-6 font-medium text-base"
-					onClick={handleAddButtonClick}
-					disabled={isAddButtonDisabled()}
-				>
-					{isApprovingA || isApprovingB
-						? "Approving..."
-						: isAddingLiquidity
-							? "Adding Liquidity..."
-							: getAddButtonText()}
-				</Button>
-			</div>
-
-			{tokenA && tokenB && amountA && amountB && (
-				<div className="mt-3 text-sm text-amber-700 bg-amber-50 rounded-lg p-3">
-					<div className="flex justify-between">
-						<span>Pool Rate</span>
-						<span className="font-medium text-amber-800">
-							1 {tokenA.symbol} ={" "}
-							{(
-								Number.parseFloat(amountB) /
-								Number.parseFloat(amountA)
-							).toFixed(6)}{" "}
-							{tokenB.symbol}
-						</span>
-					</div>
-					<div className="flex justify-between mt-1">
-						<span>Share of Pool</span>
-						<span className="font-medium text-amber-800">
-							{poolShare}%
-						</span>
-					</div>
-				</div>
-			)}
-		</div>
-	);
+      {tokenA && tokenB && amountA && amountB && (
+        <div className="mt-3 text-sm text-amber-700 bg-amber-50 rounded-lg p-3">
+          <div className="flex justify-between">
+            <span>Pool Rate</span>
+            <span className="font-medium text-amber-800">
+              1 {tokenA.symbol} ={" "}
+              {(
+                Number.parseFloat(amountB) /
+                Number.parseFloat(amountA)
+              ).toFixed(6)}{" "}
+              {tokenB.symbol}
+            </span>
+          </div>
+          <div className="flex justify-between mt-1">
+            <span>Share of Pool</span>
+            <span className="font-medium text-amber-800">
+              {poolShare}%
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }

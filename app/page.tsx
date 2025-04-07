@@ -28,13 +28,13 @@ export default function Home() {
 
         <div className="flex flex-col items-center text-center px-4 mx-auto max-w-2xl">
           <h1 className="text-4xl md:text-5xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-orange-500">
-            First DEX on XRPL EVM
+            Shape the future of XRPL EVM with Hammy
           </h1>
           <p className="text-gray-600 mb-8">
-            Swap tokens with low fees, provide liquidity, and participate in the growing XRPL EVM ecosystem.
+            Swap tokens with low fees, provide liquidity and engage with the growing XRPL EVM ecosystem.
           </p>
 
-          <div className="max-w-md w-full backdrop-blur-sm bg-white/80 p-4 rounded-xl">
+          <div className="max-w-md w-full backdrop-blur-sm bg-white/80 p-2 rounded-3xl">
             <SwapContainer />
           </div>
         </div>
@@ -62,9 +62,7 @@ export default function Home() {
               Uniswap V2 Technology
             </h3>
             <p className="text-gray-700">
-              Built on battle-tested Uniswap V2 protocol, enabling
-              robust token swaps and proven AMM mechanics on XRPL
-              EVM.
+              Built on the battle-tested Uniswap v2 protocol, enabling token swaps on XRPL EVM via robust AMM mechanics.
             </p>
           </div>
           <div className="bg-orange-100 p-6 rounded-xl shadow-sm">
@@ -72,12 +70,10 @@ export default function Home() {
               <Zap className="h-10 w-10 text-amber-600" />
             </div>
             <h3 className="text-lg font-semibold mb-3 text-amber-700 text-center">
-              Flash Loans & Arbitrage
+              Oracles & Arbitrage
             </h3>
             <p className="text-gray-700">
-              Enabling DeFi primitives like flash loans and
-              arbitrage opportunities that help balance the entire
-              XRPL EVM ecosystem.
+              Enabling DeFi primitives such as oracles and arbitrage flows to enhance market efficiency on XRPL EVM.
             </p>
           </div>
           <div className="bg-orange-100 p-6 rounded-xl shadow-sm">
@@ -88,9 +84,7 @@ export default function Home() {
               Liquidity Growth
             </h3>
             <p className="text-gray-700">
-              Incentivizing liquidity providers to bring assets to
-              XRPL EVM, fostering a deeper DeFi ecosystem for all
-              protocols.
+              Incentivizing liquidity providers to bring assets to XRPL EVM, strengthening the DeFi ecosystem across protocols.
             </p>
           </div>
         </div>
@@ -117,7 +111,7 @@ export default function Home() {
         </div>
         <div className="max-w-4xl mx-auto text-white flex flex-col items-center relative">
           <h2 className="text-2xl font-bold mb-8 text-center">
-            Pioneer of XRPL EVM DeFi
+            Pioneer DEX of XRPL EVM
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 w-full">
             <div className="flex flex-col items-center">
@@ -125,9 +119,9 @@ export default function Home() {
                 For Traders
               </h3>
               <ul className="list-disc pl-5 space-y-3">
-                <li>First DEX on XRPL EVM chain</li>
-                <li>Proven Uniswap V2 mechanics</li>
-                <li>Arbitrage opportunities across pairs</li>
+                <li>Enjoy low transaction fees</li>
+                <li>Access deep and growing liquidity</li>
+                <li>Trade via proven AMM mechanics</li>
               </ul>
             </div>
             <div className="flex flex-col items-center">
@@ -136,10 +130,10 @@ export default function Home() {
               </h3>
               <ul className="list-disc pl-5 space-y-3">
                 <li>
-                  First-mover advantage in liquidity provision
+                  Earn attractive yields by supporting early liquidity
                 </li>
-                <li>Support the growing XRPL EVM ecosystem</li>
-                <li>Enable flash loans for other protocols</li>
+                <li>Help grow and shape the XRPL EVM DeFi landscape</li>
+                <li>Join the vibrant Hammy community</li>
               </ul>
             </div>
           </div>
@@ -157,22 +151,16 @@ export default function Home() {
           />
         </div>
         <h2 className="text-2xl font-bold mb-10 text-center">
-          Powering XRPL EVM DeFi
+          Powering the XRPL EVM DeFi ecosystem
         </h2>
         <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-8 rounded-xl shadow-sm">
           <div className="flex flex-col md:flex-row gap-8 items-center">
             <div className="md:w-2/3">
               <p className="text-gray-700 mb-6">
-                As the first DEX on XRPL EVM, we're building crucial
-                infrastructure for the entire ecosystem. By implementing
-                Uniswap V2's proven mechanics, we enable essential DeFi
-                primitives like flash loans and arbitrage.
+                As the first DEX on XRPL EVM, Hammy is laying the foundation for DeFi infrastructure across the ecosystem. By leveraging the Uniswap v2 protocol, we enable core primitives such as oracles and arbitrage flows.
               </p>
               <p className="text-gray-700 mb-6">
-                Our protocol creates opportunities for traders and
-                liquidity providers while helping maintain price
-                equilibrium across the network. Join us in building the
-                foundation of XRPL EVM DeFi.
+                Hammy empowers traders and liquidity providers, contributing to price efficiency and liquidity depth within XRPL EVM. Join us in shaping the future of DeFi on XRPL EVM.
               </p>
               <div className="flex justify-center md:justify-start mt-8">
                 <a

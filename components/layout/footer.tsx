@@ -18,8 +18,7 @@ export function Footer() {
 							Hammy Swap
 						</h3>
 						<p className="text-gray-400 text-sm">
-							A decentralized exchange aggregator optimizing token
-							swaps for the best rates across multiple platforms.
+							The pioneer decentralized exchange on the XRPL EVM Sidechain.
 						</p>
 					</div>
 
@@ -125,7 +124,7 @@ export function Footer() {
 
 				<div className="border-t border-gray-700 mt-10 pt-6 flex flex-col md:flex-row justify-between items-center">
 					<p className="text-gray-400 text-sm mb-4 md:mb-0">
-						© 2024 Hammy Swap. All rights reserved.
+						© {new Date().getFullYear()} Hammy Swap. All rights reserved.
 					</p>
 					<div className="flex space-x-6">
 						<a

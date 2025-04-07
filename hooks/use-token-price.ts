@@ -83,11 +83,14 @@ export function useTokenPrice(
 			amount &&
 			Number.parseFloat(amount) > 0
 		) {
+			setIsLoading(true);
 			if (direction === "from") {
 				refetchAmountsOut();
 			} else {
 				refetchAmountsIn();
 			}
+		} else {
+			setPrice("");
 		}
 	}, [
 		tokenFrom.address,
@@ -106,38 +109,32 @@ export function useTokenPrice(
 				tokenFrom.address === tokenTo.address
 			) {
 				setPrice("");
+				setIsLoading(false);
 				return;
 			}
 
-			setIsLoading(true);
 			setError(null);
 
 			try {
-				if (
-					direction === "from" &&
-					amountsOut &&
-					amountsOut.length >= 2
-				) {
-					const outputAmount = formatUnits(
-						amountsOut[1] ?? 0n,
-						tokenTo.decimals,
-					);
-					setPrice(outputAmount);
-				} else if (
-					direction === "to" &&
-					amountsIn &&
-					amountsIn.length >= 2
-				) {
-					const inputAmount = formatUnits(
-						amountsIn[0] ?? 0n,
-						tokenFrom.decimals,
-					);
-					setPrice(inputAmount);
-				} else {
-					if (direction === "from") {
-						await refetchAmountsOut();
+				if (direction === "from") {
+					if (amountsOut && amountsOut.length >= 2) {
+						const outputAmount = formatUnits(
+							amountsOut[1] ?? 0n,
+							tokenTo.decimals,
+						);
+						setPrice(outputAmount);
 					} else {
-						await refetchAmountsIn();
+						setPrice("");
+					}
+				} else if (direction === "to") {
+					if (amountsIn && amountsIn.length >= 2) {
+						const inputAmount = formatUnits(
+							amountsIn[0] ?? 0n,
+							tokenFrom.decimals,
+						);
+						setPrice(inputAmount);
+					} else {
+						setPrice("");
 					}
 				}
 			} catch (err) {
@@ -159,8 +156,6 @@ export function useTokenPrice(
 		tokenTo.decimals,
 		amountsOut,
 		amountsIn,
-		refetchAmountsOut,
-		refetchAmountsIn,
 	]);
 
 	const refetch = direction === "from" ? refetchAmountsOut : refetchAmountsIn;

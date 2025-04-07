@@ -15,6 +15,7 @@ import { useTokenPrice } from "@/hooks/use-token-price";
 import { useTokenAllowance } from "@/hooks/use-token-allowance";
 import { useSwap } from "@/hooks/use-swap";
 import { useGasEstimate } from "@/hooks/use-gas-estimate";
+import { usePriceImpact } from "@/hooks/use-price-impact";
 import { useModal } from "connectkit";
 
 export function SwapContainer() {
@@ -53,20 +54,40 @@ export function SwapContainer() {
 		amountFrom,
 		amountTo,
 	);
+	const { priceImpact, error: priceImpactError } = usePriceImpact(
+		tokenFrom,
+		tokenTo,
+		amountFrom,
+		amountTo,
+	);
 
 	// Combine all errors
-	const error = priceError || approvalError || swapError;
+	const error = priceError || approvalError || swapError || priceImpactError;
 
 	// Update amounts when price changes
 	useEffect(() => {
-		if (isPriceLoading) return;
+		// Skip updates while loading
+		if (isPriceLoading) {
+			return;
+		}
 
+		// When "from" input is active and we have values
 		if (activeInput === "from" && amountFrom && price) {
 			setAmountTo(price);
-		} else if (activeInput === "to" && amountTo && price) {
+		}
+		// When "to" input is active and we have values
+		else if (activeInput === "to" && amountTo && price) {
 			setAmountFrom(price);
 		}
-	}, [activeInput, amountFrom, amountTo, price, isPriceLoading]);
+		// When "from" is active but price can't be calculated
+		else if (activeInput === "from" && amountFrom && (!price || priceError)) {
+			setAmountTo("");
+		}
+		// When "to" is active but price can't be calculated
+		else if (activeInput === "to" && amountTo && (!price || priceError)) {
+			setAmountFrom("");
+		}
+	}, [activeInput, amountFrom, amountTo, price, isPriceLoading, priceError]);
 
 	// Handle amount from change
 	const handleAmountFromChange = (value: string) => {
@@ -220,6 +241,7 @@ export function SwapContainer() {
 							slippage={slippage}
 							gasEstimate={gasEstimate}
 							isGasLoading={isGasLoading}
+							priceImpact={priceImpact}
 						/>
 					)}
 				</div>
