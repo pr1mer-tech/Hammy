@@ -3,7 +3,7 @@
 import { createContext, useContext, Suspense, type ReactNode } from "react";
 import type { TokenData } from "@/types/token";
 import { fetchTokenList } from "@/lib/token-list";
-import { useAccount } from "wagmi";
+import { useAccount, useChains } from "wagmi";
 import { useQuery } from "@tanstack/react-query";
 
 interface TokenListContextType {
@@ -26,6 +26,7 @@ export function useTokenList() {
 
 export function TokenListProvider({ children }: { children: ReactNode }) {
 	const account = useAccount();
+	const chains = useChains();
 
 	const {
 		data: tokenList,
@@ -33,7 +34,7 @@ export function TokenListProvider({ children }: { children: ReactNode }) {
 		isLoading,
 	} = useQuery({
 		queryKey: ["tokenList", account.chainId],
-		queryFn: () => fetchTokenList(account.chainId ?? 1),
+		queryFn: () => fetchTokenList(account.chainId ?? chains[0].id),
 	});
 
 	const tokens = tokenList ?? [];
