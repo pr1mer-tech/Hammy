@@ -1,5 +1,12 @@
 import { SwapContainer } from "@/components/swap/swap-container";
-import { RefreshCw, Zap, Shield } from "lucide-react";
+import {
+	RefreshCw,
+	Zap,
+	Shield,
+	CheckCircle,
+	Users,
+	Coins,
+} from "lucide-react";
 import Image from "next/image";
 
 export default function Home() {
@@ -53,15 +60,6 @@ export default function Home() {
 							How It Works
 						</h2>
 					</div>
-					<div className="hidden md:block">
-						<Image
-							src="/Coins_1.png"
-							alt="Decorative Coins"
-							width={250}
-							height={250}
-							className="object-contain opacity-20"
-						/>
-					</div>
 				</div>
 				<div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 					<div className="bg-orange-100 p-6 rounded-xl shadow-sm">
@@ -108,73 +106,71 @@ export default function Home() {
 
 			<section className="w-full bg-gradient-to-r from-amber-600 to-orange-500 py-16 px-4 overflow-hidden">
 				<div className="max-w-4xl mx-auto text-white flex flex-col items-center">
-					<div className="grid grid-cols-1 md:grid-cols-3 w-full mb-8">
-						<div className="hidden md:flex justify-center">
-							<Image
-								src="/Coins_2.png"
-								alt="Decorative Coins"
-								width={400}
-								height={400}
-								className="object-contain opacity-10"
-							/>
-						</div>
-						<div className="col-span-1 md:col-span-1 flex justify-center items-center">
-							<h2 className="text-2xl font-bold text-center">
-								Pioneer DEX of XRPL EVM
-							</h2>
-						</div>
-						<div className="hidden md:flex justify-center">
-							<Image
-								src="/Coins_3.png"
-								alt="Decorative Coins"
-								width={300}
-								height={300}
-								className="object-contain opacity-10"
-							/>
-						</div>
-					</div>
+					<h2 className="text-2xl font-bold text-center mb-12">
+						Pioneer DEX of XRPL EVM
+					</h2>
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-10 w-full">
-						<div className="flex flex-col items-center">
-							<h3 className="text-xl font-semibold mb-4">
+						<div className="bg-gray/10 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/20 transition-all duration-300">
+							<div className="flex justify-center mb-6">
+								<div className="bg-amber-500/30 p-4 rounded-full">
+									<Coins className="h-10 w-10 text-white" />
+								</div>
+							</div>
+							<h3 className="text-xl font-semibold mb-6 text-center">
 								For Traders
 							</h3>
-							<ul className="list-disc pl-5 space-y-3">
-								<li>Enjoy low transaction fees</li>
-								<li>Access deep and growing liquidity</li>
-								<li>Trade via proven AMM mechanics</li>
-							</ul>
+							<div className="space-y-4">
+								<div className="flex items-center gap-3 bg-white/5 p-3 rounded-lg hover:bg-white/10 transition-colors duration-200">
+									<CheckCircle className="h-5 w-5 text-amber-200 flex-shrink-0" />
+									<p>Enjoy low transaction fees</p>
+								</div>
+								<div className="flex items-center gap-3 bg-white/5 p-3 rounded-lg hover:bg-white/10 transition-colors duration-200">
+									<CheckCircle className="h-5 w-5 text-amber-200 flex-shrink-0" />
+									<p>Access deep and growing liquidity</p>
+								</div>
+								<div className="flex items-center gap-3 bg-white/5 p-3 rounded-lg hover:bg-white/10 transition-colors duration-200">
+									<CheckCircle className="h-5 w-5 text-amber-200 flex-shrink-0" />
+									<p>Trade via proven AMM mechanics</p>
+								</div>
+							</div>
 						</div>
-						<div className="flex flex-col items-center">
-							<h3 className="text-xl font-semibold mb-4">
+
+						<div className="bg-gray/10 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-white/20 transition-all duration-300">
+							<div className="flex justify-center mb-6">
+								<div className="bg-amber-500/30 p-4 rounded-full">
+									<Users className="h-10 w-10 text-white" />
+								</div>
+							</div>
+							<h3 className="text-xl font-semibold mb-6 text-center">
 								For Liquidity Providers
 							</h3>
-							<ul className="list-disc pl-5 space-y-3">
-								<li>
-									Earn attractive yields by supporting early
-									liquidity
-								</li>
-								<li>
-									Help grow and shape the XRPL EVM DeFi
-									landscape
-								</li>
-								<li>Join the vibrant Hammy community</li>
-							</ul>
+							<div className="space-y-4">
+								<div className="flex items-center gap-3 bg-white/5 p-3 rounded-lg hover:bg-white/10 transition-colors duration-200">
+									<CheckCircle className="h-5 w-5 text-amber-200 flex-shrink-0" />
+									<p>
+										Earn attractive yields by supporting
+										early liquidity
+									</p>
+								</div>
+								<div className="flex items-center gap-3 bg-white/5 p-3 rounded-lg hover:bg-white/10 transition-colors duration-200">
+									<CheckCircle className="h-5 w-5 text-amber-200 flex-shrink-0" />
+									<p>
+										Help grow and shape the XRPL EVM DeFi
+										landscape
+									</p>
+								</div>
+								<div className="flex items-center gap-3 bg-white/5 p-3 rounded-lg hover:bg-white/10 transition-colors duration-200">
+									<CheckCircle className="h-5 w-5 text-amber-200 flex-shrink-0" />
+									<p>Join the vibrant Hammy community</p>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
 			</section>
 
-			<section className="w-full max-w-4xl py-16 px-4 mx-auto">
+			<section className="w-full max-w-4xl py-16 px-4 mx-auto relative">
 				<div className="flex flex-row mb-6">
-					<div className="mr-4 hidden md:block">
-						<Image
-							src="/Coins_3.png"
-							alt="Decorative Coins"
-							width={200}
-							height={200}
-							className="object-contain rotate-45 opacity-20"
-						/>
-					</div>
 					<div className="flex-1">
 						<h2 className="text-2xl font-bold mb-10 text-center">
 							Powering the XRPL EVM DeFi ecosystem

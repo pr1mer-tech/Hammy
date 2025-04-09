@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { TokenInput } from "@/components/swap/token-input";
 import type { TokenData } from "@/types/token";
-import { Plus, Info } from "lucide-react";
+import { Plus, Info, ChartPie } from "lucide-react";
 import { useAccount, useWriteContract } from "wagmi";
 import {
 	UNISWAP_V2_ROUTER,
@@ -464,7 +464,10 @@ export function AddLiquidityForm({
 						</span>
 					</div>
 					<div className="flex justify-between mt-1">
-						<span>Share of Pool</span>
+						<div className="flex items-center gap-1.5 text-amber-700">
+							<ChartPie className="h-3.5 w-3.5" />
+							<span>Share of Pool</span>
+						</div>
 						<span className="font-medium text-amber-800">
 							{poolShare}%
 						</span>
