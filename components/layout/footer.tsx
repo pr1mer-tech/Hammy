@@ -1,5 +1,4 @@
 import {
-	DiscordIcon,
 	DocumentIcon,
 	GithubIcon,
 	MessageIcon,
@@ -95,7 +94,7 @@ export function Footer() {
 						</h3>
 						<div className="flex space-x-4">
 							<a
-								href="https://github.com"
+								href="https://github.com/pr1mer-tech/Hammy"
 								target="_blank"
 								rel="noopener noreferrer"
 								className="text-gray-400 hover:text-amber-500"
@@ -103,7 +102,7 @@ export function Footer() {
 								<GithubIcon className="h-6 w-6" />
 							</a>
 							<a
-								href="https://twitter.com"
+								href="https://x.com/HammySwap"
 								target="_blank"
 								rel="noopener noreferrer"
 								className="text-gray-400 hover:text-amber-500"

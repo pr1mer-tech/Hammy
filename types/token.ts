@@ -1,8 +1,9 @@
-export interface TokenData {
-  name: string
-  symbol: string
-  address: string
-  decimals: number
-  logoURI?: string
-}
+import type { Address } from "viem";
 
+export interface TokenData {
+	name: string;
+	symbol: string;
+	address: Address;
+	decimals: number;
+	logoURI?: string;
+}

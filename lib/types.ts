@@ -1,7 +1,7 @@
 export interface TokenData {
-  name: string
-  symbol: string
-  address: string
-  decimals: number
+	name: string;
+	symbol: string;
+	address: string;
+	decimals: number;
+	logoURI?: string;
 }
-

@@ -21,7 +21,7 @@ interface TokenSelectorProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	onSelect: (token: TokenData) => void;
-	selectedToken: TokenData;
+	selectedToken: TokenData | undefined;
 }
 
 export function TokenSelector({
@@ -143,7 +143,7 @@ export function TokenSelector({
 
 interface TokenRowProps {
 	token: TokenData;
-	selectedToken: TokenData;
+	selectedToken: TokenData | undefined;
 	onSelect: (token: TokenData) => void;
 	userAddress?: `0x${string}`;
 	isFocused: boolean;
@@ -206,7 +206,7 @@ const TokenRow = React.forwardRef<HTMLDivElement, TokenRowProps>(
 							{Number.parseFloat(balance.formatted).toFixed(4)}
 						</div>
 					)}
-					{selectedToken.address === token.address && (
+					{selectedToken?.address === token.address && (
 						<Check className="h-4 w-4 text-amber-600" />
 					)}
 				</div>

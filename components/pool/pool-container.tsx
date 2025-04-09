@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAccount } from "wagmi";
@@ -11,18 +11,25 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useModal } from "connectkit";
 import { AddLiquidityForm } from "@/components/pool/add-liquidity-form";
 import { RemoveLiquidityForm } from "@/components/pool/remove-liquidity-form";
+import { useTokenList } from "@/providers/token-list-provider";
 
 export function PoolContainer() {
 	const { isConnected } = useAccount();
 	const { setOpen: openConnectModal } = useModal();
-	const [tokenA, setTokenA] = useState<TokenData>(ETH);
-	const [tokenB, setTokenB] = useState<TokenData>(USDC);
+	const { tokens } = useTokenList();
+	const [tokenA, setTokenA] = useState<TokenData | undefined>(tokens[0]);
+	const [tokenB, setTokenB] = useState<TokenData | undefined>(tokens[1]);
 	const [activeTab, setActiveTab] = useState("add");
 	const [error, setError] = useState<string | null>(null);
 
+	useEffect(() => {
+		setTokenA(tokens[0]);
+		setTokenB(tokens[1]);
+	}, [tokens[0], tokens[1]]);
+
 	// Handle token selection
 	const handleTokenASelect = (token: TokenData) => {
-		if (token.address === tokenB.address) {
+		if (token.address === tokenB?.address) {
 			// Swap tokens if user selects the same token
 			setTokenB(tokenA);
 		}
@@ -30,7 +37,7 @@ export function PoolContainer() {
 	};
 
 	const handleTokenBSelect = (token: TokenData) => {
-		if (token.address === tokenA.address) {
+		if (token.address === tokenA?.address) {
 			// Swap tokens if user selects the same token
 			setTokenA(tokenB);
 		}

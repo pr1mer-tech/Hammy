@@ -7,8 +7,8 @@ import { type Address, formatUnits, parseUnits, zeroAddress } from "viem";
 import type { TokenData } from "@/types/token";
 
 export function useTokenPrice(
-	tokenFrom: TokenData,
-	tokenTo: TokenData,
+	tokenFrom: TokenData | undefined,
+	tokenTo: TokenData | undefined,
 	amount: string,
 	direction: "from" | "to",
 ) {
@@ -18,28 +18,28 @@ export function useTokenPrice(
 
 	// Get amounts out from Uniswap V2 Router (when direction is 'from')
 	const { data: amountsOut, refetch: refetchAmountsOut } = useReadContract({
-		address: UNISWAP_V2_ROUTER,
+		address: UNISWAP_V2_ROUTER as Address,
 		abi: UNISWAP_V2_ROUTER_ABI,
 		functionName: "getAmountsOut",
 		args: [
 			amount && Number.parseFloat(amount) > 0 && direction === "from"
-				? parseUnits(amount, tokenFrom.decimals)
-				: parseUnits("1", tokenFrom.decimals),
+				? parseUnits(amount, tokenFrom?.decimals ?? 18)
+				: parseUnits("1", tokenFrom?.decimals ?? 18),
 			[
-				tokenFrom.address === zeroAddress
+				tokenFrom?.address === zeroAddress
 					? "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-					: (tokenFrom.address as Address),
-				tokenTo.address === zeroAddress
+					: (tokenFrom?.address as Address),
+				tokenTo?.address === zeroAddress
 					? "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-					: (tokenTo.address as Address),
+					: (tokenTo?.address as Address),
 			],
 		],
 		query: {
 			enabled:
 				direction === "from" &&
-				!!tokenFrom.address &&
-				!!tokenTo.address &&
-				tokenFrom.address !== tokenTo.address &&
+				!!tokenFrom?.address &&
+				!!tokenTo?.address &&
+				tokenFrom?.address !== tokenTo?.address &&
 				!!amount &&
 				Number.parseFloat(amount) > 0,
 		},
@@ -47,28 +47,28 @@ export function useTokenPrice(
 
 	// Get amounts in from Uniswap V2 Router (when direction is 'to')
 	const { data: amountsIn, refetch: refetchAmountsIn } = useReadContract({
-		address: UNISWAP_V2_ROUTER,
+		address: UNISWAP_V2_ROUTER as Address,
 		abi: UNISWAP_V2_ROUTER_ABI,
 		functionName: "getAmountsIn",
 		args: [
 			amount && Number.parseFloat(amount) > 0 && direction === "to"
-				? parseUnits(amount, tokenTo.decimals)
-				: parseUnits("1", tokenTo.decimals),
+				? parseUnits(amount, tokenTo?.decimals ?? 18)
+				: parseUnits("1", tokenTo?.decimals ?? 18),
 			[
-				tokenFrom.address === zeroAddress
+				tokenFrom?.address === zeroAddress
 					? "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-					: (tokenFrom.address as Address),
-				tokenTo.address === zeroAddress
+					: (tokenFrom?.address as Address),
+				tokenTo?.address === zeroAddress
 					? "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-					: (tokenTo.address as Address),
+					: (tokenTo?.address as Address),
 			],
 		],
 		query: {
 			enabled:
 				direction === "to" &&
-				!!tokenFrom.address &&
-				!!tokenTo.address &&
-				tokenFrom.address !== tokenTo.address &&
+				!!tokenFrom?.address &&
+				!!tokenTo?.address &&
+				tokenFrom?.address !== tokenTo?.address &&
 				!!amount &&
 				Number.parseFloat(amount) > 0,
 		},
@@ -77,8 +77,8 @@ export function useTokenPrice(
 	// Force refetch when inputs change
 	useEffect(() => {
 		if (
-			tokenFrom.address &&
-			tokenTo.address &&
+			tokenFrom?.address &&
+			tokenTo?.address &&
 			tokenFrom.address !== tokenTo.address &&
 			amount &&
 			Number.parseFloat(amount) > 0
@@ -93,8 +93,8 @@ export function useTokenPrice(
 			setPrice("");
 		}
 	}, [
-		tokenFrom.address,
-		tokenTo.address,
+		tokenFrom?.address,
+		tokenTo?.address,
 		amount,
 		direction,
 		refetchAmountsOut,
@@ -104,12 +104,15 @@ export function useTokenPrice(
 	useEffect(() => {
 		const calculatePrice = async () => {
 			if (
+				!tokenFrom ||
+				!tokenTo ||
 				!amount ||
 				Number.parseFloat(amount) === 0 ||
 				tokenFrom.address === tokenTo.address
 			) {
 				setPrice("");
 				setIsLoading(false);
+				setError(tokenFrom && tokenTo ? null : "Tokens not selected");
 				return;
 			}
 
@@ -147,16 +150,7 @@ export function useTokenPrice(
 		};
 
 		calculatePrice();
-	}, [
-		amount,
-		direction,
-		tokenFrom.address,
-		tokenFrom.decimals,
-		tokenTo.address,
-		tokenTo.decimals,
-		amountsOut,
-		amountsIn,
-	]);
+	}, [amount, direction, tokenFrom, tokenTo, amountsOut, amountsIn]);
 
 	const refetch = direction === "from" ? refetchAmountsOut : refetchAmountsIn;
 	return { price, isLoading, error, refetch };

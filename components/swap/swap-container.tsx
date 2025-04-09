@@ -17,18 +17,27 @@ import { useSwap } from "@/hooks/use-swap";
 import { useGasEstimate } from "@/hooks/use-gas-estimate";
 import { usePriceImpact } from "@/hooks/use-price-impact";
 import { useModal } from "connectkit";
+import { useTokenList } from "@/providers/token-list-provider";
 
 export function SwapContainer() {
 	const { address } = useAccount();
 	const isConnected = address !== undefined;
 	const { setOpen } = useModal();
-	const [tokenFrom, setTokenFrom] = useState<TokenData>(ETH);
-	const [tokenTo, setTokenTo] = useState<TokenData>(USDC);
+	const { tokens } = useTokenList();
+	const [tokenFrom, setTokenFrom] = useState<TokenData | undefined>(
+		tokens[0],
+	);
+	const [tokenTo, setTokenTo] = useState<TokenData | undefined>(tokens[1]);
 	const [amountFrom, setAmountFrom] = useState("");
 	const [amountTo, setAmountTo] = useState("");
 	const [slippage, setSlippage] = useState(0.5);
 	const [settingsOpen, setSettingsOpen] = useState(false);
 	const [activeInput, setActiveInput] = useState<"from" | "to">("from");
+
+	useEffect(() => {
+		setTokenFrom(tokens[0]);
+		setTokenTo(tokens[1]);
+	}, [tokens[0], tokens[1]]);
 
 	// Custom hooks
 	const {
@@ -80,7 +89,11 @@ export function SwapContainer() {
 			setAmountFrom(price);
 		}
 		// When "from" is active but price can't be calculated
-		else if (activeInput === "from" && amountFrom && (!price || priceError)) {
+		else if (
+			activeInput === "from" &&
+			amountFrom &&
+			(!price || priceError)
+		) {
 			setAmountTo("");
 		}
 		// When "to" is active but price can't be calculated
@@ -109,7 +122,7 @@ export function SwapContainer() {
 
 	// Handle token selection
 	const handleTokenFromSelect = (token: TokenData) => {
-		if (token.address === tokenTo.address) {
+		if (token.address === tokenTo?.address) {
 			// Swap tokens if user selects the same token
 			setTokenTo(tokenFrom);
 		}
@@ -117,7 +130,7 @@ export function SwapContainer() {
 	};
 
 	const handleTokenToSelect = (token: TokenData) => {
-		if (token.address === tokenFrom.address) {
+		if (token.address === tokenFrom?.address) {
 			// Swap tokens if user selects the same token
 			setTokenFrom(tokenTo);
 		}
@@ -138,16 +151,18 @@ export function SwapContainer() {
 		}
 
 		if (needsApproval) {
-			approveToken();
+			approveToken?.();
 		} else {
-			executeSwap(tokenFrom, tokenTo, amountFrom, amountTo, slippage);
+			tokenFrom &&
+				tokenTo &&
+				executeSwap(tokenFrom, tokenTo, amountFrom, amountTo, slippage);
 		}
 	};
 
 	const getButtonText = () => {
 		if (!isConnected) return "Connect Wallet";
 		if (!amountFrom || !amountTo) return "Enter an amount";
-		if (tokenFrom.address === tokenTo.address)
+		if (tokenFrom?.address === tokenTo?.address)
 			return "Cannot swap same token";
 		if (needsApproval) return "Approve";
 		return "Swap";
@@ -156,7 +171,7 @@ export function SwapContainer() {
 	const isButtonDisabled = () => {
 		if (!isConnected) return false;
 		if (!amountFrom || !amountTo) return true;
-		if (tokenFrom.address === tokenTo.address) return true;
+		if (tokenFrom?.address === tokenTo?.address) return true;
 		if (isPriceLoading || isApproving || isSwapping) return true;
 		return false;
 	};
@@ -240,7 +255,7 @@ export function SwapContainer() {
 							amountTo={amountTo}
 							slippage={slippage}
 							gasEstimate={gasEstimate}
-							isGasLoading={isGasLoading}
+							isGasLoading={isGasLoading ?? false}
 							priceImpact={priceImpact}
 						/>
 					)}

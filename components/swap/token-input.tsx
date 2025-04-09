@@ -14,7 +14,7 @@ import { zeroAddress } from "viem";
 interface TokenInputProps {
 	value: string;
 	onChange: (value: string) => void;
-	token: TokenData;
+	token: TokenData | undefined;
 	onSelectToken: (token: TokenData) => void;
 	label?: string;
 	isLoading?: boolean;
@@ -35,9 +35,9 @@ export function TokenInput({
 	const { data: balanceData } = useBalance({
 		address,
 		token:
-			token.address === zeroAddress
+			token?.address === zeroAddress
 				? undefined
-				: (token.address as `0x${string}`),
+				: (token?.address as `0x${string}`),
 		query: {
 			enabled: isConnected && !!address,
 		},
@@ -87,7 +87,7 @@ export function TokenInput({
 					className="flex items-center gap-2 px-3 h-10 border-amber-100 hover:border-amber-200 hover:bg-amber-50"
 					onClick={() => setOpen(true)}
 				>
-					{token.logoURI ? (
+					{token?.logoURI ? (
 						<Image
 							src={token.logoURI || "/placeholder.svg"}
 							alt={token.symbol}
@@ -97,11 +97,11 @@ export function TokenInput({
 						/>
 					) : (
 						<div className="w-6 h-6 rounded-full token-icon flex items-center justify-center">
-							{token.symbol.charAt(0)}
+							{token?.symbol.charAt(0)}
 						</div>
 					)}
 					<span className="font-medium text-amber-800">
-						{token.symbol}
+						{token?.symbol}
 					</span>
 					<ChevronDown className="h-4 w-4 text-amber-400 mr-2" />
 				</Button>

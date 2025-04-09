@@ -18,8 +18,8 @@ import Image from "next/image";
 import { useModal } from "connectkit";
 
 interface RemoveLiquidityFormProps {
-	tokenA: TokenData;
-	tokenB: TokenData;
+	tokenA: TokenData | undefined;
+	tokenB: TokenData | undefined;
 	onTokenASelect: (token: TokenData) => void;
 	onTokenBSelect: (token: TokenData) => void;
 	onError: (error: string | null) => void;
@@ -47,15 +47,15 @@ export function RemoveLiquidityForm({
 		abi: UNISWAP_V2_FACTORY_ABI,
 		functionName: "getPair",
 		args: [
-			tokenA.address === zeroAddress
+			!tokenA || tokenA?.address === zeroAddress
 				? "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-				: tokenA.address,
-			tokenB.address === zeroAddress
+				: tokenA?.address,
+			!tokenB || tokenB?.address === zeroAddress
 				? "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
-				: tokenB.address,
+				: tokenB?.address,
 		],
 		query: {
-			enabled: isConnected && !!tokenA.address && !!tokenB.address,
+			enabled: isConnected && !!tokenA?.address && !!tokenB?.address,
 		},
 	});
 
@@ -104,7 +104,10 @@ export function RemoveLiquidityForm({
 	// Update LP token amount based on percentage
 	useEffect(() => {
 		if (lpBalance) {
-			const totalLpBalance = formatUnits(lpBalance.toString(), 18);
+			const totalLpBalance = formatUnits(
+				BigInt(lpBalance.toString()),
+				18,
+			);
 			const amount =
 				(Number.parseFloat(totalLpBalance) * lpTokenPercentage) / 100;
 			setLpTokenAmount(amount.toFixed(6));
@@ -164,20 +167,20 @@ export function RemoveLiquidityForm({
 
 			// ETH + Token
 			if (
-				tokenA.address === zeroAddress ||
-				tokenB.address === zeroAddress
+				tokenA?.address === zeroAddress ||
+				tokenB?.address === zeroAddress
 			) {
-				const token = tokenA.address === zeroAddress ? tokenB : tokenA;
+				const token = tokenA?.address === zeroAddress ? tokenB : tokenA;
 
 				await writeContract({
 					address: UNISWAP_V2_ROUTER,
 					abi: UNISWAP_V2_ROUTER_ABI,
 					functionName: "removeLiquidityETH",
 					args: [
-						token.address,
+						token?.address ?? zeroAddress,
 						parsedLpAmount,
-						0, // amountTokenMin (with slippage)
-						0, // amountETHMin (with slippage)
+						0n, // amountTokenMin (with slippage)
+						0n, // amountETHMin (with slippage)
 						address,
 						deadline,
 					],
@@ -190,11 +193,11 @@ export function RemoveLiquidityForm({
 					abi: UNISWAP_V2_ROUTER_ABI,
 					functionName: "removeLiquidity",
 					args: [
-						tokenA.address,
-						tokenB.address,
+						tokenA?.address ?? zeroAddress,
+						tokenB?.address ?? zeroAddress,
 						parsedLpAmount,
-						0, // amountAMin (with slippage)
-						0, // amountBMin (with slippage)
+						0n, // amountAMin (with slippage)
+						0n, // amountBMin (with slippage)
 						address,
 						deadline,
 					],
@@ -237,23 +240,23 @@ export function RemoveLiquidityForm({
 						<div className="flex items-center justify-between">
 							<div className="flex items-center gap-2">
 								<div className="flex -space-x-2">
-									{tokenA.logoURI ? (
+									{tokenA?.logoURI ? (
 										<Image
 											src={
-												tokenA.logoURI ||
+												tokenA?.logoURI ||
 												"/placeholder.svg"
 											}
-											alt={tokenA.symbol}
+											alt={tokenA?.symbol}
 											width={24}
 											height={24}
 											className="rounded-full z-10 border-2 border-white"
 										/>
 									) : (
 										<div className="w-6 h-6 rounded-full token-icon flex items-center justify-center z-10 border-2 border-white">
-											{tokenA.symbol.charAt(0)}
+											{tokenA?.symbol.charAt(0)}
 										</div>
 									)}
-									{tokenB.logoURI ? (
+									{tokenB?.logoURI ? (
 										<Image
 											src={
 												tokenB.logoURI ||
@@ -266,18 +269,21 @@ export function RemoveLiquidityForm({
 										/>
 									) : (
 										<div className="w-6 h-6 rounded-full token-icon flex items-center justify-center border-2 border-white">
-											{tokenB.symbol.charAt(0)}
+											{tokenB?.symbol.charAt(0)}
 										</div>
 									)}
 								</div>
 								<span className="font-medium text-amber-800">
-									{tokenA.symbol}/{tokenB.symbol}
+									{tokenA?.symbol}/{tokenB?.symbol}
 								</span>
 							</div>
 							<div className="text-right">
 								<div className="text-amber-800 font-medium">
-									{formatUnits(lpBalance.toString(), 18)} LP
-									Tokens
+									{formatUnits(
+										BigInt(lpBalance.toString()),
+										18,
+									)}{" "}
+									LP Tokens
 								</div>
 							</div>
 						</div>
@@ -300,7 +306,6 @@ export function RemoveLiquidityForm({
 							onValueChange={(value) =>
 								setLpTokenPercentage(value[0])
 							}
-							className="[&>span]:bg-amber-500"
 						/>
 						<div className="text-sm text-right text-amber-700">
 							{lpTokenAmount} LP Tokens

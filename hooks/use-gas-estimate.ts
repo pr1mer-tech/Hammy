@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Address, parseEther, parseUnits, zeroAddress } from "viem";
+import { type Address, parseEther, parseUnits, zeroAddress } from "viem";
 import { useAccount, useBalance, usePublicClient } from "wagmi";
 import { useQuery } from "@tanstack/react-query";
 import { UNISWAP_V2_ROUTER, UNISWAP_V2_ROUTER_ABI } from "@/lib/constants";
@@ -14,8 +14,8 @@ BigInt.prototype.toJSON = function () {
 };
 
 export function useGasEstimate(
-	tokenFrom: TokenData,
-	tokenTo: TokenData,
+	tokenFrom: TokenData | undefined,
+	tokenTo: TokenData | undefined,
 	amountFrom: string,
 	amountTo: string,
 ) {
@@ -32,7 +32,13 @@ export function useGasEstimate(
 
 	// Create memoized contract params to ensure they update when tokens change
 	const contractParams = useMemo(() => {
-		if (!amountFrom || Number.parseFloat(amountFrom) <= 0) return null;
+		if (
+			!tokenFrom ||
+			!tokenTo ||
+			!amountFrom ||
+			Number.parseFloat(amountFrom) <= 0
+		)
+			return null;
 
 		const deadline = BigInt(Math.floor(Date.now() / 1000) + 60 * 20); // 20 minutes deadline
 		const wethAddress = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"; // WETH
@@ -101,10 +107,12 @@ export function useGasEstimate(
 			account: address,
 		} as const;
 	}, [
-		tokenFrom.address,
-		tokenFrom.decimals,
-		tokenTo.address,
-		tokenTo.decimals,
+		tokenFrom,
+		tokenTo,
+		tokenFrom?.address,
+		tokenFrom?.decimals,
+		tokenTo?.address,
+		tokenTo?.decimals,
 		address,
 		amountFrom,
 		amountTo,
@@ -126,13 +134,11 @@ export function useGasEstimate(
 				// First, check if we need to simulate getAmountsOut to get a better amountOutMin
 				if (!amountTo || Number(amountTo) <= 0) {
 					// This is a fallback if amountTo isn't provided
-					const path =
-						contractParams.args[
-							contractParams.functionName ===
-							"swapExactETHForTokens"
-								? 1
-								: 2
-						];
+					const path = contractParams.args[
+						contractParams.functionName === "swapExactETHForTokens"
+							? 1
+							: 2
+					] as readonly `0x${string}`[];
 					const amountIn =
 						contractParams.functionName === "swapExactETHForTokens"
 							? contractParams.value
@@ -183,13 +189,25 @@ export function useGasEstimate(
 			!!publicClient &&
 			!!amountFrom &&
 			Number.parseFloat(amountFrom) > 0 &&
-			!!tokenFrom.address &&
-			!!tokenTo.address &&
+			!!tokenFrom?.address &&
+			!!tokenTo?.address &&
 			tokenFrom.address !== tokenTo.address &&
 			!!contractParams,
 		staleTime: 30000, // 30 seconds
 		retry: 1,
 	});
+
+	if (
+		!tokenFrom ||
+		!tokenTo ||
+		!amountFrom ||
+		Number.parseFloat(amountFrom) <= 0
+	) {
+		return {
+			gasEstimate: null,
+			error: null,
+		};
+	}
 
 	return {
 		gasEstimate: gasEstimate || null,

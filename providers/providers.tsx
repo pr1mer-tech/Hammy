@@ -3,7 +3,7 @@
 import type React from "react";
 
 import { WagmiProvider, createConfig } from "wagmi";
-import { mainnet } from "wagmi/chains";
+import { mainnet, xrplevmTestnet } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
@@ -18,12 +18,17 @@ const config = createConfig(
 		appName: "Hammy Swap",
 		walletConnectProjectId:
 			process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "demo",
-		chains: [mainnet],
+		chains: [xrplevmTestnet],
 		transports: {
-			[mainnet.id]: http(),
+			[xrplevmTestnet.id]: http(),
 		},
 	}),
 );
+
+//@ts-expect-error - JSON stupid api
+BigInt.prototype.toJSON = function () {
+	return this.toString();
+};
 
 export function Providers({ children }: { children: React.ReactNode }) {
 	return (
