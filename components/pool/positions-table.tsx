@@ -187,8 +187,8 @@ export function PositionsTable() {
 					// If one token is USDC, use the USDC balance directly to calculate value
 					const usdcBalance =
 						pair.tokenA.address === USDC.address
-							? parseFloat(tokenABalance)
-							: parseFloat(tokenBBalance);
+							? Number.parseFloat(tokenABalance)
+							: Number.parseFloat(tokenBBalance);
 
 					// Calculate the approximate position value (2x the USDC amount)
 					const positionValue = usdcBalance * 2;

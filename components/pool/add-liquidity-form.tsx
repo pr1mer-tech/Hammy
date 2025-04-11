@@ -16,9 +16,11 @@ import { useModal } from "connectkit";
 import { useTokenAllowance } from "@/hooks/use-token-allowance";
 import { usePoolExists } from "@/hooks/use-pool-exists";
 import { useProportionalAmounts } from "@/hooks/use-proportional-amounts";
+import { useAddLiquidityGasEstimate } from "@/hooks/use-gas-estimate";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { SwapIcon } from "@/components/ui/icons";
+import { GasIcon, SwapIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface AddLiquidityFormProps {
 	tokenA: TokenData | undefined;
@@ -92,6 +94,9 @@ export function AddLiquidityForm({
 	} = useTokenAllowance(tokenB, amountB);
 
 	const { writeContractAsync: writeContract } = useWriteContract();
+	const queryClient = useQueryClient();
+	const { gasEstimate, isLoading: isGasEstimateLoading } =
+		useAddLiquidityGasEstimate(tokenA, tokenB, amountA, amountB);
 
 	// Calculate pool share
 	useEffect(() => {
@@ -328,6 +333,9 @@ export function AddLiquidityForm({
 			// Reset form after successful addition
 			setAmountA("");
 			setAmountB("");
+
+			// Invalidate related queries to refresh data
+			queryClient.invalidateQueries({ queryKey: ["positions"] });
 		} catch (err) {
 			console.error("Error adding liquidity:", err);
 			onError("Failed to add liquidity. Please try again.");
@@ -472,6 +480,19 @@ export function AddLiquidityForm({
 							{poolShare}%
 						</span>
 					</div>
+					{gasEstimate && (
+						<div className="flex justify-between mt-1">
+							<div className="flex items-center gap-1.5 text-amber-700">
+								<GasIcon className="h-3.5 w-3.5" />
+								<span>Estimated Gas</span>
+							</div>
+							<span className="font-medium text-amber-800">
+								{isGasEstimateLoading
+									? "Calculating..."
+									: gasEstimate}
+							</span>
+						</div>
+					)}
 				</div>
 			)}
 		</div>
