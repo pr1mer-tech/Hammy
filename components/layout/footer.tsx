@@ -17,7 +17,8 @@ export function Footer() {
 							Hammy Swap
 						</h3>
 						<p className="text-gray-400 text-sm">
-							The pioneer decentralized exchange on the XRPL EVM Sidechain.
+							The pioneer decentralized exchange on the XRPL EVM
+							Sidechain.
 						</p>
 					</div>
 
@@ -28,14 +29,14 @@ export function Footer() {
 						<ul className="space-y-2">
 							<li>
 								<a
-									href="#"
+									href="https://docs.hammy.finance"
 									className="text-gray-400 hover:text-amber-500 text-sm flex items-center"
 								>
 									<DocumentIcon className="h-4 w-4 mr-2" />
 									Documentation
 								</a>
 							</li>
-							<li>
+							{/* <li>
 								<a
 									href="#"
 									className="text-gray-400 hover:text-amber-500 text-sm flex items-center"
@@ -43,10 +44,10 @@ export function Footer() {
 									<QuestionIcon className="h-4 w-4 mr-2" />
 									FAQs
 								</a>
-							</li>
+							</li> */}
 							<li>
 								<a
-									href="#"
+									href="mailto:contact@hammy.finance"
 									className="text-gray-400 hover:text-amber-500 text-sm flex items-center"
 								>
 									<MessageIcon className="h-4 w-4 mr-2" />
@@ -63,28 +64,20 @@ export function Footer() {
 						<ul className="space-y-2">
 							<li>
 								<a
-									href="#"
+									href="https://docs.hammy.finance/contracts"
 									className="text-gray-400 hover:text-amber-500 text-sm"
 								>
-									Governance
+									Contracts
 								</a>
 							</li>
-							<li>
-								<a
-									href="#"
-									className="text-gray-400 hover:text-amber-500 text-sm"
-								>
-									Security
-								</a>
-							</li>
-							<li>
+							{/* <li>
 								<a
 									href="#"
 									className="text-gray-400 hover:text-amber-500 text-sm"
 								>
 									Tokenomics
 								</a>
-							</li>
+							</li> */}
 						</ul>
 					</div>
 
@@ -109,31 +102,32 @@ export function Footer() {
 							>
 								<TwitterXIcon className="h-6 w-6" />
 							</a>
-							<a
+							{/* <a
 								href="https://t.me"
 								target="_blank"
 								rel="noopener noreferrer"
 								className="text-gray-400 hover:text-amber-500"
 							>
 								<TelegramIcon className="h-6 w-6" />
-							</a>
+							</a> */}
 						</div>
 					</div>
 				</div>
 
 				<div className="border-t border-gray-700 mt-10 pt-6 flex flex-col md:flex-row justify-between items-center">
 					<p className="text-gray-400 text-sm mb-4 md:mb-0">
-						© {new Date().getFullYear()} Hammy Swap. All rights reserved.
+						© {new Date().getFullYear()} Hammy Swap. All rights
+						reserved.
 					</p>
 					<div className="flex space-x-6">
 						<a
-							href="#"
+							href="https://docs.hammy.finance/terms"
 							className="text-gray-400 hover:text-amber-500 text-sm"
 						>
 							Terms of Service
 						</a>
 						<a
-							href="#"
+							href="https://docs.hammy.finance/privacy"
 							className="text-gray-400 hover:text-amber-500 text-sm"
 						>
 							Privacy Policy

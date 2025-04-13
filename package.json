@@ -11,7 +11,10 @@
 		"build:worker": "opennextjs-cloudflare build",
 		"dev:worker": "wrangler dev --port 8771",
 		"preview:worker": "npm run build:worker && npm run dev:worker",
-		"deploy:worker": "npm run build:worker && wrangler deploy"
+		"deploy:worker": "npm run build:worker && wrangler deploy",
+		"vocs:dev": "vocs dev",
+		"vocs:build": "vocs build",
+		"vocs:preview": "vocs preview"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^3.9.1",
@@ -69,6 +72,7 @@
 		"tailwindcss-animate": "^1.0.7",
 		"vaul": "^0.9.6",
 		"viem": "2.x",
+		"vocs": "^1.0.11",
 		"wagmi": "^2.14.16",
 		"zod": "^3.24.1"
 	},

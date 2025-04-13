@@ -9,6 +9,12 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 
+export const metadata = {
+	title: "Hammy",
+	description:
+		"Hammy Swap is the pioneer DEX on the XRPL EVM Sidechain. It offers seamless swap and yield-farming services, combining security, cost-effectiveness and a user-friendly experience.",
+};
+
 export default function Home() {
 	return (
 		<div className="flex flex-col items-center justify-center mx-auto w-full">

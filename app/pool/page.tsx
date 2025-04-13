@@ -1,6 +1,12 @@
 import { PoolContainer } from "@/components/pool/pool-container";
 import { PositionsTable } from "@/components/pool/positions-table";
 
+export const metadata = {
+	title: "Hammy Pools",
+	description:
+		"Earn high yields on your assets with Hammy Swap's liquidity pools. Enjoy a seamless experience with our user-friendly interface.",
+};
+
 export default function PoolPage() {
 	return (
 		<div className="flex flex-col max-w-6xl mx-auto">
