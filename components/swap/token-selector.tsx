@@ -9,13 +9,21 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useState, useRef, useEffect } from "react";
 import type { TokenData } from "@/types/token";
 import { Check, Search } from "lucide-react";
-import { useAccount, useBalance } from "wagmi";
+import {
+	useAccount,
+	useBalance,
+	useChainId,
+	usePublicClient,
+	useWriteContract,
+} from "wagmi";
 import Image from "next/image";
 import { useTokenList } from "@/providers/token-list-provider";
-import { zeroAddress } from "viem";
+import { zeroAddress, parseEther, formatUnits } from "viem";
+import { xrplevmTestnet } from "viem/chains";
 
 interface TokenSelectorProps {
 	open: boolean;
@@ -125,7 +133,9 @@ export function TokenSelector({
 								onSelect={handleSelect}
 								userAddress={address}
 								isFocused={focusedIndex === index}
-								ref={(el) => (itemRefs.current[index] = el)}
+								ref={(el) => {
+									itemRefs.current[index] = el;
+								}}
 								tabIndex={index + 1}
 							/>
 						))}
@@ -155,7 +165,10 @@ const TokenRow = React.forwardRef<HTMLDivElement, TokenRowProps>(
 		{ token, selectedToken, onSelect, userAddress, isFocused, tabIndex },
 		ref,
 	) => {
-		const { data: balance } = useBalance({
+		const chainId = useChainId();
+		const isXrplEvmTestnet = chainId === xrplevmTestnet.id; // Chain ID for xrplEvmTestnet
+
+		const { data: balance, refetch } = useBalance({
 			address: userAddress,
 			token:
 				token.address === zeroAddress
@@ -165,6 +178,51 @@ const TokenRow = React.forwardRef<HTMLDivElement, TokenRowProps>(
 				enabled: !!userAddress,
 			},
 		});
+
+		// Setup contract write for minting tokens
+		const { writeContractAsync, isPending } = useWriteContract();
+		const publicClient = usePublicClient();
+
+		// Handle minting tokens
+		const handleMint = async (e: React.MouseEvent) => {
+			e.stopPropagation(); // Prevent token selection when clicking mint button
+
+			if (!userAddress || token.address === zeroAddress) return;
+
+			try {
+				const txHash = await writeContractAsync({
+					address: token.address as `0x${string}`,
+					abi: [
+						{
+							inputs: [
+								{
+									internalType: "address",
+									name: "to",
+									type: "address",
+								},
+								{
+									internalType: "uint256",
+									name: "amount",
+									type: "uint256",
+								},
+							],
+							name: "mint",
+							outputs: [],
+							stateMutability: "nonpayable",
+							type: "function",
+						},
+					],
+					functionName: "mint",
+					args: [userAddress, parseEther("100")],
+				});
+
+				await publicClient?.waitForTransactionReceipt({ hash: txHash });
+
+				await refetch();
+			} catch (error) {
+				console.error("Failed to mint tokens:", error);
+			}
+		};
 
 		return (
 			<div
@@ -176,6 +234,11 @@ const TokenRow = React.forwardRef<HTMLDivElement, TokenRowProps>(
 				tabIndex={tabIndex}
 				role="button"
 				aria-selected={isFocused}
+				onKeyDown={(e) => {
+					if (e.key === "Enter" || e.key === " ") {
+						onSelect(token);
+					}
+				}}
 			>
 				<div className="flex items-center gap-3">
 					{token.logoURI ? (
@@ -199,11 +262,24 @@ const TokenRow = React.forwardRef<HTMLDivElement, TokenRowProps>(
 							{token.name}
 						</div>
 					</div>
+					{isXrplEvmTestnet && token.address !== zeroAddress && (
+						<Button
+							variant="outline"
+							size="sm"
+							className="ml-2 text-xs bg-amber-100 hover:bg-amber-200 border-amber-300 text-amber-800"
+							onClick={handleMint}
+							disabled={isPending || !userAddress}
+						>
+							{isPending ? "Minting..." : "Mint"}
+						</Button>
+					)}
 				</div>
 				<div className="flex items-center gap-2">
 					{balance && (
 						<div className="text-sm text-right text-amber-700 font-medium">
-							{Number.parseFloat(balance.formatted).toFixed(4)}
+							{Number.parseFloat(
+								formatUnits(balance.value, balance.decimals),
+							).toFixed(4)}
 						</div>
 					)}
 					{selectedToken?.address === token.address && (
