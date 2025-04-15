@@ -66,7 +66,7 @@ export function RemoveLiquidityForm({
 				: tokenB?.address,
 		],
 		query: {
-			enabled: isConnected && !!tokenA?.address && !!tokenB?.address,
+			enabled: !!tokenA?.address && !!tokenB?.address,
 		},
 	});
 
@@ -77,11 +77,7 @@ export function RemoveLiquidityForm({
 		functionName: "balanceOf",
 		args: [address || zeroAddress],
 		query: {
-			enabled:
-				isConnected &&
-				!!pairAddress &&
-				pairAddress !== zeroAddress &&
-				!!address,
+			enabled: !!pairAddress && pairAddress !== zeroAddress && !!address,
 		},
 	});
 
@@ -92,11 +88,7 @@ export function RemoveLiquidityForm({
 		functionName: "allowance",
 		args: [address || zeroAddress, UNISWAP_V2_ROUTER],
 		query: {
-			enabled:
-				isConnected &&
-				!!pairAddress &&
-				pairAddress !== zeroAddress &&
-				!!address,
+			enabled: !!pairAddress && pairAddress !== zeroAddress && !!address,
 		},
 	});
 
@@ -106,11 +98,7 @@ export function RemoveLiquidityForm({
 		abi: UNISWAP_V2_PAIR_ABI,
 		functionName: "getReserves",
 		query: {
-			enabled:
-				isConnected &&
-				!!pairAddress &&
-				pairAddress !== zeroAddress &&
-				!!address,
+			enabled: !!pairAddress && pairAddress !== zeroAddress && !!address,
 		},
 	});
 
@@ -120,8 +108,7 @@ export function RemoveLiquidityForm({
 		abi: UNISWAP_V2_PAIR_ABI,
 		functionName: "token0",
 		query: {
-			enabled:
-				isConnected && !!pairAddress && pairAddress !== zeroAddress,
+			enabled: !!pairAddress && pairAddress !== zeroAddress,
 		},
 	});
 
@@ -131,8 +118,7 @@ export function RemoveLiquidityForm({
 		abi: erc20Abi,
 		functionName: "totalSupply",
 		query: {
-			enabled:
-				isConnected && !!pairAddress && pairAddress !== zeroAddress,
+			enabled: !!pairAddress && pairAddress !== zeroAddress,
 		},
 	});
 
@@ -178,13 +164,7 @@ export function RemoveLiquidityForm({
 
 	// Handle approving LP tokens
 	const handleApprove = async () => {
-		if (
-			!isConnected ||
-			!address ||
-			!pairAddress ||
-			pairAddress === zeroAddress
-		)
-			return;
+		if (!address || !pairAddress || pairAddress === zeroAddress) return;
 
 		setIsApproving(true);
 		onError(null);
@@ -216,7 +196,6 @@ export function RemoveLiquidityForm({
 
 	const handleRemoveLiquidity = async () => {
 		if (
-			!isConnected ||
 			!address ||
 			!pairAddress ||
 			pairAddress === zeroAddress ||

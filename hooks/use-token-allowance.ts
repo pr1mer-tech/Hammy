@@ -28,10 +28,7 @@ export function useTokenAllowance(
 		args: [address || zeroAddress, UNISWAP_V2_ROUTER],
 		query: {
 			enabled:
-				isConnected &&
-				!!token?.address &&
-				token?.address !== zeroAddress &&
-				!!address,
+				!!token?.address && token?.address !== zeroAddress && !!address,
 		},
 	});
 
@@ -40,7 +37,6 @@ export function useTokenAllowance(
 		const checkAllowance = () => {
 			console.log({ isConnected, address, token, amount, allowance });
 			if (
-				!isConnected ||
 				!address ||
 				!token ||
 				!amount ||
@@ -66,13 +62,7 @@ export function useTokenAllowance(
 
 	// Approve token
 	const approveToken = async () => {
-		if (
-			!isConnected ||
-			!address ||
-			!token ||
-			!amount ||
-			token.address === zeroAddress
-		) {
+		if (!address || !token || !amount || token.address === zeroAddress) {
 			return;
 		}
 

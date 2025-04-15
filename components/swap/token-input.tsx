@@ -39,7 +39,7 @@ export function TokenInput({
 				? undefined
 				: (token?.address as `0x${string}`),
 		query: {
-			enabled: isConnected && !!address,
+			enabled: !!address,
 		},
 	});
 

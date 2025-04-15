@@ -22,6 +22,7 @@ const config = createConfig(
 		transports: {
 			[xrplevmTestnet.id]: http(),
 		},
+		ssr: true,
 	}),
 );
 

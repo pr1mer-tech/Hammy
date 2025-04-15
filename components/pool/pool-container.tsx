@@ -13,8 +13,6 @@ import { RemoveLiquidityForm } from "@/components/pool/remove-liquidity-form";
 import { useTokenList } from "@/providers/token-list-provider";
 
 export function PoolContainer() {
-	const { isConnected } = useAccount();
-	const { setOpen: openConnectModal } = useModal();
 	const { tokens } = useTokenList();
 	const [tokenA, setTokenA] = useState<TokenData | undefined>(tokens[0]);
 	const [tokenB, setTokenB] = useState<TokenData | undefined>(tokens[1]);

@@ -84,7 +84,7 @@ export function PositionsTable() {
 			],
 		})),
 		query: {
-			enabled: isConnected && !!address,
+			enabled: !!address,
 		},
 	});
 
@@ -105,8 +105,7 @@ export function PositionsTable() {
 				},
 			]) || [],
 		query: {
-			enabled:
-				isConnected && !!address && !!pairData && pairData.length > 0,
+			enabled: !!address && !!pairData && pairData.length > 0,
 		},
 	});
 
@@ -119,8 +118,7 @@ export function PositionsTable() {
 				functionName: "getReserves",
 			})) || [],
 		query: {
-			enabled:
-				isConnected && !!address && !!pairData && pairData.length > 0,
+			enabled: !!address && !!pairData && pairData.length > 0,
 		},
 	});
 
@@ -133,11 +131,7 @@ export function PositionsTable() {
 			reservesData,
 		],
 		enabled:
-			isConnected &&
-			!!address &&
-			!!pairData &&
-			!!balanceAndSupplyData &&
-			!!reservesData,
+			!!address && !!pairData && !!balanceAndSupplyData && !!reservesData,
 		queryFn: async () => {
 			const userPositions: Position[] = [];
 

@@ -22,15 +22,7 @@ const nextConfig = {
 		parallelServerCompiles: true,
 	},
 	webpack: (config) => {
-		// config.resolve.fallback = { fs: false };
-		// config.externals.push(
-		// 	"pino-pretty",
-		// 	"lokijs",
-		//  	"encoding",
-		//  	"bufferutil",
-		//  	"utf-8-validate",
-		// );
-
+		config.resolve.fallback = { fs: false, net: false, tls: false };
 		return config;
 	},
 
@@ -66,7 +58,7 @@ function mergeConfig(nextConfig, userConfig) {
 	for (const key in userConfig) {
 		if (
 			typeof nextConfig[key] === "object" &&
-				!Array.isArray(nextConfig[key])
+			!Array.isArray(nextConfig[key])
 		) {
 			nextConfig[key] = {
 				...nextConfig[key],
