@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAccount, useReadContract, useWriteContract } from "wagmi";
+import {
+	useAccount,
+	usePublicClient,
+	useReadContract,
+	useWriteContract,
+} from "wagmi";
 import { ERC20_ABI, UNISWAP_V2_ROUTER } from "@/lib/constants";
 import { parseUnits, zeroAddress } from "viem";
 import type { TokenData } from "@/types/token";
@@ -16,7 +21,7 @@ export function useTokenAllowance(
 	const [error, setError] = useState<string | null>(null);
 
 	const { writeContractAsync: writeContract } = useWriteContract();
-
+	const publicClient = usePublicClient();
 	// Get allowance for ERC20 token
 	const { data: allowance, refetch: refetchAllowance } = useReadContract({
 		address:
@@ -73,11 +78,15 @@ export function useTokenAllowance(
 			// Use the exact amount entered by the user
 			const parsedAmount = parseUnits(amount, token.decimals);
 
-			await writeContract({
+			const txHash = await writeContract({
 				address: token.address as `0x${string}`,
 				abi: ERC20_ABI,
 				functionName: "approve",
 				args: [UNISWAP_V2_ROUTER, parsedAmount],
+			});
+
+			await publicClient?.waitForTransactionReceipt({
+				hash: txHash,
 			});
 
 			await refetchAllowance();
