@@ -7,7 +7,9 @@ import {
 	createConfig,
 	injected,
 	useAccount,
+	useChains,
 	useReconnect,
+	useSwitchChain,
 } from "wagmi";
 import { mainnet, xrplevmTestnet } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -160,6 +162,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 						"--ck-recent-badge-border-radius": "32px",
 					}}
 				>
+					<ChainSwitcher />
 					<ThemeProvider
 						attribute="class"
 						defaultTheme="light"
@@ -172,4 +175,26 @@ export function Providers({ children }: { children: React.ReactNode }) {
 			</QueryClientProvider>
 		</WagmiProvider>
 	);
+}
+
+function ChainSwitcher() {
+	// Check if conencted on mainnet, and switch to XRPL if so
+	const { chain } = useAccount();
+	const { switchChain } = useSwitchChain();
+	const allChains = useChains();
+
+	useEffect(() => {
+		if (chain?.id === mainnet.id) {
+			const timeout = setTimeout(() => {
+				switchChain({
+					chainId: xrplevmTestnet.id,
+				});
+				allChains;
+			}, 1000);
+
+			return () => clearTimeout(timeout);
+		}
+	}, [chain?.id, switchChain]);
+
+	return null;
 }
