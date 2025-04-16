@@ -2,29 +2,35 @@
 
 import type React from "react";
 
-import { WagmiProvider, createConfig } from "wagmi";
+import {
+	WagmiProvider,
+	createConfig,
+	injected,
+	useAccount,
+	useReconnect,
+} from "wagmi";
 import { mainnet, xrplevmTestnet } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 import { http } from "viem";
 import { TokenListProvider } from "@/providers/token-list-provider";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient();
+const connectKitConfig = getDefaultConfig({
+	appName: "Hammy Swap",
+	walletConnectProjectId:
+		process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "demo",
+	chains: [xrplevmTestnet, mainnet],
+	transports: {
+		[xrplevmTestnet.id]: http(),
+	},
+	ssr: true,
+});
 
 // Create wagmi config with ConnectKit
-const config = createConfig(
-	getDefaultConfig({
-		appName: "Hammy Swap",
-		walletConnectProjectId:
-			process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "demo",
-		chains: [xrplevmTestnet],
-		transports: {
-			[xrplevmTestnet.id]: http(),
-		},
-		ssr: true,
-	}),
-);
+const config = createConfig(connectKitConfig);
 
 //@ts-expect-error - JSON stupid api
 BigInt.prototype.toJSON = function () {

@@ -21,8 +21,8 @@ export default function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body className={`${inter.className} gradient-bg min-h-screen`}>
-				<PostHogProvider>
-					<Providers>
+				<Providers>
+					<PostHogProvider>
 						<div className="flex flex-col min-h-screen">
 							<Header />
 							<main className="flex-1 mx-auto w-full px-0 py-6">
@@ -30,8 +30,8 @@ export default function RootLayout({
 							</main>
 							<Footer />
 						</div>
-					</Providers>
-				</PostHogProvider>
+					</PostHogProvider>
+				</Providers>
 			</body>
 		</html>
 	);
