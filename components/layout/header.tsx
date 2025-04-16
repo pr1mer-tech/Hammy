@@ -12,7 +12,7 @@ export function Header() {
 	const navItems = [
 		{ name: "Swap", href: "/" },
 		{ name: "Pools", href: "/pool" },
-		{ name: "Docs", href: "/docs" },
+		{ name: "Docs", href: "https://docs.hammy.finance" },
 	];
 
 	return (

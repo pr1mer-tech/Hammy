@@ -73,7 +73,7 @@ export default function Home() {
 							<RefreshCw className="h-10 w-10 text-amber-600" />
 						</div>
 						<h3 className="text-lg font-semibold mb-3 text-amber-700 text-center">
-							Uniswap V2 Technology
+							Uniswap v2 Technology
 						</h3>
 						<p className="text-gray-700">
 							Built on the battle-tested Uniswap v2 protocol,
@@ -201,7 +201,7 @@ export default function Home() {
 							</p>
 							<div className="flex justify-center md:justify-start mt-8">
 								<a
-									href="#"
+									href="https://docs.hammy.finance/"
 									className="bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-700 hover:to-orange-600 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-200"
 								>
 									Read Our Documentation
