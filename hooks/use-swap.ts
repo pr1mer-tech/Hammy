@@ -1,20 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 import { UNISWAP_V2_ROUTER, UNISWAP_V2_ROUTER_ABI } from "@/lib/constants";
 import { parseUnits, zeroAddress } from "viem";
 import type { TokenData } from "@/types/token";
+import { toast } from "sonner";
 
 export function useSwap() {
 	const { address, isConnected } = useAccount();
+	const publicClient = usePublicClient();
 	const [isSwapping, setIsSwapping] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
 	const [txHash, setTxHash] = useState<string | null>(null);
 
 	const { writeContractAsync: writeContract } = useWriteContract();
 
-	const executeSwap = async (
+	const _executeSwap = async (
 		tokenFrom: TokenData,
 		tokenTo: TokenData,
 		amountFrom: string,
@@ -56,6 +58,10 @@ export function useSwap() {
 				});
 
 				setTxHash(tx);
+
+				await publicClient?.waitForTransactionReceipt({
+					hash: tx,
+				});
 			}
 			// Token -> ETH
 			else if (tokenTo.address === zeroAddress) {
@@ -76,6 +82,10 @@ export function useSwap() {
 				});
 
 				setTxHash(tx);
+
+				await publicClient?.waitForTransactionReceipt({
+					hash: tx,
+				});
 			}
 			// Token -> Token
 			else {
@@ -93,6 +103,10 @@ export function useSwap() {
 				});
 
 				setTxHash(tx);
+
+				await publicClient?.waitForTransactionReceipt({
+					hash: tx,
+				});
 			}
 		} catch (err) {
 			console.error("Error executing swap:", err);
@@ -102,5 +116,29 @@ export function useSwap() {
 		}
 	};
 
+	const executeSwap = async (
+		tokenFrom: TokenData,
+		tokenTo: TokenData,
+		amountFrom: string,
+		amountTo: string,
+		slippage: number,
+	) => {
+		toast.promise(
+			async () => {
+				await _executeSwap(
+					tokenFrom,
+					tokenTo,
+					amountFrom,
+					amountTo,
+					slippage,
+				);
+			},
+			{
+				loading: "Swapping...",
+				success: "Swap successful!",
+				error: "Swap failed. Please try again.",
+			},
+		);
+	};
 	return { isSwapping, error, txHash, executeSwap };
 }

@@ -10,6 +10,7 @@ import {
 import { ERC20_ABI, UNISWAP_V2_ROUTER } from "@/lib/constants";
 import { parseUnits, zeroAddress } from "viem";
 import type { TokenData } from "@/types/token";
+import { toast } from "sonner";
 
 export function useTokenAllowance(
 	token: TokenData | undefined,
@@ -66,7 +67,7 @@ export function useTokenAllowance(
 	}, [isConnected, address, token, amount, allowance]);
 
 	// Approve token
-	const approveToken = async () => {
+	const _approveToken = async () => {
 		if (!address || !token || !amount || token.address === zeroAddress) {
 			return;
 		}
@@ -97,6 +98,14 @@ export function useTokenAllowance(
 		} finally {
 			setIsApproving(false);
 		}
+	};
+
+	const approveToken = () => {
+		toast.promise(_approveToken, {
+			loading: "Approving token...",
+			success: "Token approved!",
+			error: "Failed to approve token",
+		});
 	};
 
 	if (!token || !amount) {

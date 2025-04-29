@@ -4,6 +4,7 @@ import { Providers } from "@/providers/providers";
 import { PostHogProvider } from "@/components/PostHogProvider";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
+import { Toaster } from "@/components/ui/sonner";
 import "@/app/globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -32,9 +33,11 @@ export default function RootLayout({
 						</div>
 					</PostHogProvider>
 				</Providers>
+				<Toaster />
 			</body>
 		</html>
 	);
 }
 
 import "./globals.css";
+import { Toast } from "@radix-ui/react-toast";

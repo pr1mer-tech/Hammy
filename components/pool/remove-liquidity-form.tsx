@@ -28,6 +28,7 @@ import { useModal } from "connectkit";
 import { useRemoveLiquidityGasEstimate } from "@/hooks/use-gas-estimate";
 import { useQueryClient } from "@tanstack/react-query";
 import { GasIcon } from "../ui/icons";
+import { toast } from "sonner";
 
 interface RemoveLiquidityFormProps {
 	tokenA: TokenData | undefined;
@@ -206,7 +207,7 @@ export function RemoveLiquidityForm({
 		}
 	};
 
-	const handleRemoveLiquidity = async () => {
+	const _handleRemoveLiquidity = async () => {
 		if (
 			!address ||
 			!pairAddress ||
@@ -325,6 +326,14 @@ export function RemoveLiquidityForm({
 		} finally {
 			setIsRemovingLiquidity(false);
 		}
+	};
+
+	const handleRemoveLiquidity = () => {
+		toast.promise(_handleRemoveLiquidity, {
+			loading: "Removing liquidity...",
+			success: "Liquidity removed successfully!",
+			error: "Failed to remove liquidity. Please try again.",
+		});
 	};
 
 	const getButtonText = () => {

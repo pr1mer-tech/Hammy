@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { TokenInput } from "@/components/swap/token-input";
 import type { TokenData } from "@/types/token";
 import { Plus, Info, ChartPie } from "lucide-react";
-import { useAccount, useWriteContract } from "wagmi";
+import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 import {
 	UNISWAP_V2_ROUTER,
 	UNISWAP_V2_ROUTER_ABI,
@@ -21,6 +21,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { GasIcon, SwapIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 interface AddLiquidityFormProps {
 	tokenA: TokenData | undefined;
@@ -45,6 +46,7 @@ export function AddLiquidityForm({
 	const [activeInput, setActiveInput] = useState<"a" | "b">("a");
 	const [poolShare, setPoolShare] = useState<string>("0");
 	const [isRateInverted, setIsRateInverted] = useState(false);
+	const publicClient = usePublicClient();
 
 	// Check if pool exists
 	const {
@@ -245,11 +247,11 @@ export function AddLiquidityForm({
 
 		try {
 			if (tokenA?.address !== zeroAddress && needsApprovalA) {
-				await approveTokenA();
+				approveTokenA();
 			}
 
 			if (tokenB?.address !== zeroAddress && needsApprovalB) {
-				await approveTokenB();
+				approveTokenB();
 			}
 		} catch (err) {
 			console.error("Error approving tokens:", err);
@@ -257,7 +259,7 @@ export function AddLiquidityForm({
 		}
 	};
 
-	const handleAddLiquidity = async () => {
+	const _handleAddLiquidity = async () => {
 		if (!isConnected || !address) return;
 
 		setIsAddingLiquidity(true);
@@ -296,7 +298,7 @@ export function AddLiquidityForm({
 				const ethAmountMin =
 					tokenA?.address === zeroAddress ? amountAMin : amountBMin;
 
-				await writeContract({
+				const tx = await writeContract({
 					address: UNISWAP_V2_ROUTER as `0x${string}`,
 					abi: UNISWAP_V2_ROUTER_ABI,
 					functionName: "addLiquidityETH",
@@ -310,10 +312,14 @@ export function AddLiquidityForm({
 					],
 					value: ethAmount,
 				});
+
+				await publicClient?.waitForTransactionReceipt({
+					hash: tx,
+				});
 			}
 			// Token + Token
 			else {
-				await writeContract({
+				const tx = await writeContract({
 					address: UNISWAP_V2_ROUTER as `0x${string}`,
 					abi: UNISWAP_V2_ROUTER_ABI,
 					functionName: "addLiquidity",
@@ -327,6 +333,10 @@ export function AddLiquidityForm({
 						address,
 						deadline,
 					],
+				});
+
+				await publicClient?.waitForTransactionReceipt({
+					hash: tx,
 				});
 			}
 
@@ -342,6 +352,14 @@ export function AddLiquidityForm({
 		} finally {
 			setIsAddingLiquidity(false);
 		}
+	};
+
+	const handleAddLiquidity = () => {
+		toast.promise(_handleAddLiquidity, {
+			loading: "Adding liquidity...",
+			success: "Liquidity added successfully!",
+			error: "Failed to add liquidity. Please try again.",
+		});
 	};
 
 	const getAddButtonText = () => {
