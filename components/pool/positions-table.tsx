@@ -13,31 +13,17 @@ import Image from "next/image";
 import { useTokenList } from "@/providers/token-list-provider";
 import { Button } from "@/components/ui/button";
 import { useModal } from "connectkit";
-import type { TokenData } from "@/lib/types";
+import type { TokenData, Position } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
-
-interface Position {
-	pairAddress: string;
-	tokenA: {
-		address: string;
-		symbol: string;
-		balance: string;
-		logoURI?: string;
-	};
-	tokenB: {
-		address: string;
-		symbol: string;
-		balance: string;
-		logoURI?: string;
-	};
-	lpTokens: string;
-	value?: string;
-}
+import { useSetAtom } from "jotai";
+import { selectPositionAtom } from "@/lib/store";
 
 export function PositionsTable() {
 	const { address, isConnected } = useAccount();
 	const { setOpen } = useModal();
 	const { tokens } = useTokenList();
+	const setSelectedPosition = useSetAtom(selectPositionAtom);
+	const [selectedPairAddress, setSelectedPairAddress] = useState<string | null>(null);
 
 	const USDC = tokens.slice(0, 8).find((token) => token.symbol === "USDC");
 
@@ -263,7 +249,11 @@ export function PositionsTable() {
 								{positions?.map((position) => (
 									<tr
 										key={position.pairAddress}
-										className="hover:bg-amber-50/50"
+										className={`hover:bg-amber-50/50 cursor-pointer ${position.pairAddress === selectedPairAddress ? 'bg-amber-100' : ''}`}
+										onClick={() => {
+											setSelectedPosition(position);
+											setSelectedPairAddress(position.pairAddress);
+										}}
 									>
 										<td className="py-4 px-4">
 											<div className="flex items-center gap-2">

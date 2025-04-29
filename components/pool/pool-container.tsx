@@ -11,18 +11,25 @@ import { useModal } from "connectkit";
 import { AddLiquidityForm } from "@/components/pool/add-liquidity-form";
 import { RemoveLiquidityForm } from "@/components/pool/remove-liquidity-form";
 import { useTokenList } from "@/providers/token-list-provider";
+import { useAtom } from "jotai";
+import { tokenAAtom, tokenBAtom } from "@/lib/store";
 
 export function PoolContainer() {
 	const { tokens } = useTokenList();
-	const [tokenA, setTokenA] = useState<TokenData | undefined>(tokens[0]);
-	const [tokenB, setTokenB] = useState<TokenData | undefined>(tokens[1]);
+	const [tokenA, setTokenA] = useAtom(tokenAAtom);
+	const [tokenB, setTokenB] = useAtom(tokenBAtom);
 	const [activeTab, setActiveTab] = useState("add");
 	const [error, setError] = useState<string | null>(null);
 
+	// Initialize tokenA and tokenB with default values if they're undefined
 	useEffect(() => {
-		setTokenA(tokens[0]);
-		setTokenB(tokens[1]);
-	}, [tokens[0], tokens[1]]);
+		if (!tokenA && tokens.length > 0) {
+			setTokenA(tokens[0]);
+		}
+		if (!tokenB && tokens.length > 1) {
+			setTokenB(tokens[1]);
+		}
+	}, [tokens, tokenA, tokenB, setTokenA, setTokenB]);
 
 	// Handle token selection
 	const handleTokenASelect = (token: TokenData) => {

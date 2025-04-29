@@ -9,6 +9,8 @@ import {
 	useReadContract,
 	useWriteContract,
 } from "wagmi";
+import { useAtomValue } from "jotai";
+import { selectedPositionAtom } from "@/lib/store";
 import {
 	UNISWAP_V2_FACTORY_ABI,
 	UNISWAP_V2_FACTORY,
@@ -49,6 +51,16 @@ export function RemoveLiquidityForm({
 	const [lpTokenPercentage, setLpTokenPercentage] = useState(100);
 	const [isRemovingLiquidity, setIsRemovingLiquidity] = useState(false);
 	const [isApproving, setIsApproving] = useState(false);
+
+	// Get the selected position from Jotai store
+	const selectedPosition = useAtomValue(selectedPositionAtom);
+
+	// Reset the LP token percentage to 100% when a position is selected
+	useEffect(() => {
+		if (selectedPosition) {
+			setLpTokenPercentage(100);
+		}
+	}, [selectedPosition]);
 
 	const { writeContractAsync: writeContract } = useWriteContract();
 
@@ -341,9 +353,16 @@ export function RemoveLiquidityForm({
 			lpBalance &&
 			BigInt(lpBalance.toString()) > 0 ? (
 				<>
-					<div className="p-4 border border-amber-100 rounded-lg bg-amber-50/50">
-						<div className="text-sm text-amber-700 mb-2 font-medium">
+					<div
+						className={`p-4 border ${selectedPosition ? "border-amber-300" : "border-amber-100"} rounded-lg ${selectedPosition ? "bg-amber-50" : "bg-amber-50/50"}`}
+					>
+						<div className="text-sm text-amber-700 mb-2 font-medium flex items-center">
 							Your Position
+							{!selectedPosition && (
+								<span className="ml-2 px-2 py-0.5 text-xs bg-amber-200 text-amber-800 rounded-full">
+									Select from Position Table
+								</span>
+							)}
 						</div>
 						<div className="flex items-center justify-between">
 							<div className="flex items-center gap-2">
