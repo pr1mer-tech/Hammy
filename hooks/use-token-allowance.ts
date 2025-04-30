@@ -95,6 +95,8 @@ export function useTokenAllowance(
 		} catch (err) {
 			console.error("Error approving token:", err);
 			setError("Failed to approve token");
+			setIsApproving(false);
+			throw new Error("Failed to approve token");
 		} finally {
 			setIsApproving(false);
 		}

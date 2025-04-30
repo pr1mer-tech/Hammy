@@ -33,7 +33,7 @@ export default function RootLayout({
 						</div>
 					</PostHogProvider>
 				</Providers>
-				<Toaster />
+				<Toaster richColors />
 			</body>
 		</html>
 	);

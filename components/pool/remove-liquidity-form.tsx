@@ -176,7 +176,7 @@ export function RemoveLiquidityForm({
 	}, [lpBalance, lpTokenPercentage]);
 
 	// Handle approving LP tokens
-	const handleApprove = async () => {
+	const _handleApprove = async () => {
 		if (!address || !pairAddress || pairAddress === zeroAddress) return;
 
 		setIsApproving(true);
@@ -202,9 +202,19 @@ export function RemoveLiquidityForm({
 		} catch (err) {
 			console.error("Error approving LP tokens:", err);
 			onError("Failed to approve LP tokens. Please try again.");
+			setIsApproving(false);
+			throw new Error("Failed to approve LP tokens. Please try again.");
 		} finally {
 			setIsApproving(false);
 		}
+	};
+
+	const handleApprove = () => {
+		toast.promise(_handleApprove, {
+			loading: "Approving LP tokens...",
+			success: "LP tokens approved!",
+			error: "Failed to approve LP tokens. Please try again.",
+		});
 	};
 
 	const _handleRemoveLiquidity = async () => {
@@ -220,7 +230,7 @@ export function RemoveLiquidityForm({
 
 		// Double-check if approval is needed before proceeding
 		if (needsApproval) {
-			await handleApprove();
+			handleApprove();
 			return;
 		}
 
@@ -323,6 +333,8 @@ export function RemoveLiquidityForm({
 		} catch (err) {
 			console.error("Error removing liquidity:", err);
 			onError("Failed to remove liquidity. Please try again.");
+			setIsRemovingLiquidity(false);
+			throw new Error("Failed to remove liquidity. Please try again.");
 		} finally {
 			setIsRemovingLiquidity(false);
 		}

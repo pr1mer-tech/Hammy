@@ -349,6 +349,8 @@ export function AddLiquidityForm({
 		} catch (err) {
 			console.error("Error adding liquidity:", err);
 			onError("Failed to add liquidity. Please try again.");
+			setIsAddingLiquidity(false);
+			throw new Error("Failed to add liquidity. Please try again.");
 		} finally {
 			setIsAddingLiquidity(false);
 		}

@@ -111,6 +111,8 @@ export function useSwap() {
 		} catch (err) {
 			console.error("Error executing swap:", err);
 			setError("Failed to execute swap. Please try again.");
+			setIsSwapping(false);
+			throw new Error("Failed to execute swap. Please try again.");
 		} finally {
 			setIsSwapping(false);
 		}
