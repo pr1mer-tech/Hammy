@@ -333,7 +333,7 @@ export function useAddLiquidityGasEstimate(
 				return `~$${gasCostUsd.toFixed(2)}`;
 			} catch (err) {
 				console.error("Gas estimation error:", err);
-				return "Estimation failed";
+				return "-";
 			}
 		},
 		enabled:
@@ -488,7 +488,7 @@ export function useRemoveLiquidityGasEstimate(
 				return `~$${gasCostUsd.toFixed(2)}`;
 			} catch (err) {
 				console.error("Gas estimation error:", err);
-				return "Estimation failed";
+				return "-";
 			}
 		},
 		enabled:

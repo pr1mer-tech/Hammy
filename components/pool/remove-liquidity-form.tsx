@@ -460,19 +460,17 @@ export function RemoveLiquidityForm({
 						</div>
 					</div>
 
-					{gasEstimate && (
-						<div className="flex justify-between p-3 bg-amber-50/70 rounded-lg border border-amber-100">
-							<div className="flex items-center gap-1.5 text-amber-700">
-								<GasIcon className="h-3.5 w-3.5" />
-								<span>Estimated Gas</span>
-							</div>
-							<span className="font-medium text-amber-800">
-								{isGasEstimateLoading
-									? "Calculating..."
-									: gasEstimate}
-							</span>
+					<div className="flex justify-between p-3 bg-amber-50/70 rounded-lg border border-amber-100">
+						<div className="flex items-center gap-1.5 text-amber-700">
+							<GasIcon className="h-3.5 w-3.5" />
+							<span>Estimated Gas</span>
 						</div>
-					)}
+						<span className="font-medium text-amber-800">
+							{isGasEstimateLoading
+								? "Calculating..."
+								: gasEstimate}
+						</span>
+					</div>
 
 					<div className="pt-3">
 						<Button

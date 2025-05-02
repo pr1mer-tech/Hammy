@@ -78,7 +78,7 @@ export function SwapDetails({
 					<span>Network Fee</span>
 				</div>
 				<span className="font-medium text-amber-800">
-					{isGasLoading ? "Calculating..." : gasEstimate || "Unknown"}
+					{isGasLoading ? "Calculating..." : gasEstimate || "-"}
 				</span>
 			</div>
 

@@ -500,19 +500,18 @@ export function AddLiquidityForm({
 							{poolShare}%
 						</span>
 					</div>
-					{gasEstimate && (
-						<div className="flex justify-between mt-1">
-							<div className="flex items-center gap-1.5 text-amber-700">
-								<GasIcon className="h-3.5 w-3.5" />
-								<span>Estimated Gas</span>
-							</div>
-							<span className="font-medium text-amber-800">
-								{isGasEstimateLoading
-									? "Calculating..."
-									: gasEstimate}
-							</span>
+
+					<div className="flex justify-between mt-1">
+						<div className="flex items-center gap-1.5 text-amber-700">
+							<GasIcon className="h-3.5 w-3.5" />
+							<span>Estimated Gas</span>
 						</div>
-					)}
+						<span className="font-medium text-amber-800">
+							{isGasEstimateLoading
+								? "Calculating..."
+								: gasEstimate}
+						</span>
+					</div>
 				</div>
 			)}
 		</div>

@@ -56,7 +56,7 @@ export function useTokenAllowance(
 			try {
 				const parsedAllowance = BigInt(allowance?.toString() || "0");
 				const parsedAmount = parseUnits(amount, token.decimals);
-				setNeedsApproval(parsedAllowance <= parsedAmount);
+				setNeedsApproval(parsedAllowance < parsedAmount);
 			} catch (err) {
 				console.error("Error checking allowance:", err);
 				setNeedsApproval(false);
