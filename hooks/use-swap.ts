@@ -6,6 +6,7 @@ import { UNISWAP_V2_ROUTER, UNISWAP_V2_ROUTER_ABI } from "@/lib/constants";
 import { parseUnits, zeroAddress } from "viem";
 import type { TokenData } from "@/types/token";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function useSwap() {
 	const { address, isConnected } = useAccount();
@@ -13,7 +14,7 @@ export function useSwap() {
 	const [isSwapping, setIsSwapping] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
 	const [txHash, setTxHash] = useState<string | null>(null);
-
+	const queryClient = useQueryClient();
 	const { writeContractAsync: writeContract } = useWriteContract();
 
 	const _executeSwap = async (
@@ -108,6 +109,7 @@ export function useSwap() {
 					hash: tx,
 				});
 			}
+			queryClient.invalidateQueries();
 		} catch (err) {
 			console.error("Error executing swap:", err);
 			setError("Failed to execute swap. Please try again.");

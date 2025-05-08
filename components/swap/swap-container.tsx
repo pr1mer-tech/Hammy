@@ -156,6 +156,9 @@ export function SwapContainer() {
 			tokenFrom &&
 				tokenTo &&
 				executeSwap(tokenFrom, tokenTo, amountFrom, amountTo, slippage);
+
+			setAmountFrom("");
+			setAmountTo("");
 		}
 	};
 

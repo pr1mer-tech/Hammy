@@ -345,7 +345,7 @@ export function AddLiquidityForm({
 			setAmountB("");
 
 			// Invalidate related queries to refresh data
-			queryClient.invalidateQueries({ queryKey: ["positions"] });
+			queryClient.invalidateQueries();
 		} catch (err) {
 			console.error("Error adding liquidity:", err);
 			onError("Failed to add liquidity. Please try again.");

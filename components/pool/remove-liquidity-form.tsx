@@ -329,7 +329,7 @@ export function RemoveLiquidityForm({
 			await refetchLpBalance();
 
 			// Invalidate related queries to refresh data
-			queryClient.invalidateQueries({ queryKey: ["positions"] });
+			queryClient.invalidateQueries();
 		} catch (err) {
 			console.error("Error removing liquidity:", err);
 			onError("Failed to remove liquidity. Please try again.");

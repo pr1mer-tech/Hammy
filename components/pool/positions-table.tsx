@@ -23,38 +23,38 @@ export function PositionsTable() {
 	const { setOpen } = useModal();
 	const { tokens } = useTokenList();
 	const setSelectedPosition = useSetAtom(selectPositionAtom);
-	const [selectedPairAddress, setSelectedPairAddress] = useState<string | null>(null);
+	const [selectedPairAddress, setSelectedPairAddress] = useState<
+		string | null
+	>(null);
+
+	/* ---------------------------------------------------------------------- */
+	/*                               Pairs set-up                             */
+	/* ---------------------------------------------------------------------- */
 
 	const USDC = tokens.slice(0, 8).find((token) => token.symbol === "USDC");
 
-	// Generate pairs from first 8 tokens without duplicates
+	// Generate all unique pairs out of the first 8 tokens
 	const commonPairs = tokens.slice(0, 8).reduce<
 		Array<{
 			tokenA: TokenData & { address: `0x${string}` };
 			tokenB: TokenData & { address: `0x${string}` };
 		}>
 	>((pairs, tokenA, indexA) => {
-		// Only consider tokens after the current token to avoid duplicates
 		const tokenBCandidates = tokens.slice(indexA + 1, 8);
-
-		const tokenPairs = tokenBCandidates.map((tokenB) => {
-			return {
-				tokenA: {
-					...tokenA,
-					address: tokenA.address as `0x${string}`,
-				},
-				tokenB: {
-					...tokenB,
-					address: tokenB.address as `0x${string}`,
-				},
-			};
-		});
-
-		pairs.push(...tokenPairs);
+		for (const tokenB of tokenBCandidates) {
+			pairs.push({
+				tokenA: { ...tokenA, address: tokenA.address as `0x${string}` },
+				tokenB: { ...tokenB, address: tokenB.address as `0x${string}` },
+			});
+		}
 		return pairs;
 	}, []);
 
-	// Get pair addresses for common pairs
+	/* ---------------------------------------------------------------------- */
+	/*                  Batch contract reads (pairs, balances, reserves)      */
+	/* ---------------------------------------------------------------------- */
+
+	// Pair addresses
 	const { data: pairData } = useReadContracts({
 		contracts: commonPairs.map((pair) => ({
 			address: UNISWAP_V2_FACTORY,
@@ -69,12 +69,10 @@ export function PositionsTable() {
 					: pair.tokenB.address,
 			],
 		})),
-		query: {
-			enabled: !!address,
-		},
+		query: { enabled: !!address },
 	});
 
-	// Get LP token balances and total supply for each pair
+	// LP balances + total supplies
 	const { data: balanceAndSupplyData } = useReadContracts({
 		contracts:
 			pairData?.flatMap((pair) => [
@@ -95,7 +93,7 @@ export function PositionsTable() {
 		},
 	});
 
-	// Get reserves for each pair
+	// Reserves
 	const { data: reservesData } = useReadContracts({
 		contracts:
 			pairData?.map((pair) => ({
@@ -108,6 +106,10 @@ export function PositionsTable() {
 		},
 	});
 
+	/* ---------------------------------------------------------------------- */
+	/*                        Build positions (with extras)                   */
+	/* ---------------------------------------------------------------------- */
+
 	const { data: positions, isLoading } = useQuery({
 		queryKey: [
 			"positions",
@@ -119,87 +121,125 @@ export function PositionsTable() {
 		enabled:
 			!!address && !!pairData && !!balanceAndSupplyData && !!reservesData,
 		queryFn: async () => {
+			/* --------------------------- constants ----------------------------- */
+			const DUST_THRESHOLD_USD = 0.01; // hide < 1 cent
+
+			/* ---------------------- helper structures -------------------------- */
+			const pairInfo = (pairData ?? []).map((p, i) => ({
+				pairAddress: p.result as string,
+				tokenA: commonPairs[i].tokenA,
+				tokenB: commonPairs[i].tokenB,
+				reserves: (reservesData?.[i]?.result ?? []) as bigint[],
+			}));
+
+			/* ----------------------- price discovery --------------------------- */
+			const price: Record<string, number> = {};
+			if (USDC) price[USDC.address.toLowerCase()] = 1; // USDC ~ $1
+
+			let updated = true;
+			while (updated) {
+				updated = false;
+				for (const p of pairInfo) {
+					if (!p.reserves.length) continue;
+
+					const rA = Number(
+						formatUnits(p.reserves[0], p.tokenA.decimals ?? 18),
+					);
+					const rB = Number(
+						formatUnits(p.reserves[1], p.tokenB.decimals ?? 18),
+					);
+					if (!rA || !rB) continue;
+
+					const a = p.tokenA.address.toLowerCase();
+					const b = p.tokenB.address.toLowerCase();
+
+					if (price[a] !== undefined && price[b] === undefined) {
+						price[b] = (rA / rB) * price[a];
+						updated = true;
+					} else if (
+						price[b] !== undefined &&
+						price[a] === undefined
+					) {
+						price[a] = (rB / rA) * price[b];
+						updated = true;
+					}
+				}
+			}
+
+			/* --------------------- build user positions ------------------------ */
 			const userPositions: Position[] = [];
 
-			for (let i = 0; i < (pairData?.length ?? 0); i++) {
-				const pairAddress = pairData?.[i].result as string;
-				const balance = balanceAndSupplyData?.[i * 2]
-					?.result as unknown as bigint;
+			for (let i = 0; i < pairInfo.length; i++) {
+				const { pairAddress, tokenA, tokenB, reserves } = pairInfo[i];
+
+				const balanceBig = balanceAndSupplyData?.[i * 2]?.result as
+					| bigint
+					| undefined;
 				const totalSupply = balanceAndSupplyData?.[i * 2 + 1]
-					?.result as unknown as bigint;
-				const reserves = reservesData?.[i]
-					?.result as unknown as bigint[];
+					?.result as bigint | undefined;
 
 				if (
 					!pairAddress ||
 					pairAddress === zeroAddress ||
-					!balance ||
-					BigInt(balance.toString()) === BigInt(0) ||
-					!reserves ||
-					!totalSupply
-				) {
+					!balanceBig ||
+					balanceBig === 0n ||
+					!totalSupply ||
+					totalSupply === 0n ||
+					!reserves.length
+				)
 					continue;
-				}
 
-				const pair = commonPairs[i];
-				const lpTokens = formatUnits(BigInt(balance.toString()), 18);
+				const share = Number(balanceBig) / Number(totalSupply);
 
-				const shareOfPool = Number(balance) / Number(totalSupply);
-				const tokenABalance = formatUnits(
-					(BigInt(reserves[0].toString()) *
-						BigInt(balance.toString())) /
-						totalSupply,
-					pair.tokenA.decimals || 18,
-				);
-				const tokenBBalance = formatUnits(
-					(BigInt(reserves[1].toString()) *
-						BigInt(balance.toString())) /
-						totalSupply,
-					pair.tokenB.decimals || 18,
-				);
+				const balA =
+					share *
+					Number(formatUnits(reserves[0], tokenA.decimals ?? 18));
+				const balB =
+					share *
+					Number(formatUnits(reserves[1], tokenB.decimals ?? 18));
 
-				let value: string | undefined;
-				if (
-					USDC &&
-					(pair.tokenA.address === USDC.address ||
-						pair.tokenB.address === USDC.address)
-				) {
-					// If one token is USDC, use the USDC balance directly to calculate value
-					const usdcBalance =
-						pair.tokenA.address === USDC.address
-							? Number.parseFloat(tokenABalance)
-							: Number.parseFloat(tokenBBalance);
+				/* value in USD (if both tokens priced) */
+				const pA = price[tokenA.address.toLowerCase()];
+				const pB = price[tokenB.address.toLowerCase()];
+				let valueUSD: number | undefined;
 
-					// Calculate the approximate position value (2x the USDC amount)
-					const positionValue = usdcBalance * 2;
-					value = `$${positionValue.toLocaleString(undefined, {
-						minimumFractionDigits: 2,
-						maximumFractionDigits: 2,
-					})}`;
+				if (pA !== undefined && pB !== undefined) {
+					valueUSD = balA * pA + balB * pB;
+					if (valueUSD < DUST_THRESHOLD_USD) continue; // dust filter
 				}
 
 				userPositions.push({
 					pairAddress,
 					tokenA: {
-						address: pair.tokenA.address,
-						symbol: pair.tokenA.symbol,
-						balance: tokenABalance,
-						logoURI: pair.tokenA.logoURI,
+						address: tokenA.address,
+						symbol: tokenA.symbol,
+						balance: balA.toString(),
+						logoURI: tokenA.logoURI,
 					},
 					tokenB: {
-						address: pair.tokenB.address,
-						symbol: pair.tokenB.symbol,
-						balance: tokenBBalance,
-						logoURI: pair.tokenB.logoURI,
+						address: tokenB.address,
+						symbol: tokenB.symbol,
+						balance: balB.toString(),
+						logoURI: tokenB.logoURI,
 					},
-					lpTokens,
-					value,
+					lpTokens: formatUnits(balanceBig, 18),
+					value:
+						valueUSD !== undefined
+							? `$${valueUSD.toLocaleString(undefined, {
+									minimumFractionDigits: 2,
+									maximumFractionDigits: 2,
+								})}`
+							: undefined,
 				});
 			}
 
 			return userPositions;
 		},
 	});
+
+	/* ---------------------------------------------------------------------- */
+	/*                              JSX layout                                */
+	/* ---------------------------------------------------------------------- */
 
 	return (
 		<Card className="card-gradient rounded-2xl border-0 overflow-hidden h-full">
@@ -249,11 +289,30 @@ export function PositionsTable() {
 								{positions?.map((position) => (
 									<tr
 										key={position.pairAddress}
-										className={`hover:bg-amber-50/50 cursor-pointer ${position.pairAddress === selectedPairAddress ? 'bg-amber-100' : ''}`}
+										className={`hover:bg-amber-50/50 cursor-pointer ${
+											position.pairAddress ===
+											selectedPairAddress
+												? "bg-amber-100"
+												: ""
+										}`}
 										onClick={() => {
 											setSelectedPosition(position);
-											setSelectedPairAddress(position.pairAddress);
+											setSelectedPairAddress(
+												position.pairAddress,
+											);
 										}}
+										onKeyDown={(e) => {
+											if (
+												e.key === "Enter" ||
+												e.key === " "
+											) {
+												setSelectedPosition(position);
+												setSelectedPairAddress(
+													position.pairAddress,
+												);
+											}
+										}}
+										tabIndex={0}
 									>
 										<td className="py-4 px-4">
 											<div className="flex items-center gap-2">
