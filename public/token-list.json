@@ -13,8 +13,9 @@
 		{
 			"chainId": 1449000,
 			"address": "0x1a1C2099EC8da6B98D0b1fD93dED956FbE4ed577",
-			"name": "Ethereum",
-			"symbol": "ETH",
+			"name": "XRP",
+			"symbol": "XRP",
+			"logoURI": "https://assets.coingecko.com/coins/images/44/standard/xrp-symbol-white-128.png",
 			"decimals": 18
 		},
 		{
@@ -22,6 +23,7 @@
 			"address": "0x925965a6FCe11D0589dAD8972e7e5B8879bCb9ef",
 			"name": "USD Coin",
 			"symbol": "USDC",
+			"logoURI": "https://assets.coingecko.com/coins/images/6319/standard/usdc.png",
 			"decimals": 18
 		},
 		{
@@ -29,6 +31,7 @@
 			"address": "0x0f2E0FBa7161921dfa097a3550936A399b5fa09c",
 			"name": "Bitcoin",
 			"symbol": "BTC",
+			"logoURI": "https://assets.coingecko.com/coins/images/1/standard/bitcoin.png",
 			"decimals": 18
 		}
 	]
