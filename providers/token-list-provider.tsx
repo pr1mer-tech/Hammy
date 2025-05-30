@@ -41,19 +41,17 @@ export function TokenListProvider({ children }: { children: ReactNode }) {
 	const popularTokens = tokens.slice(0, 8);
 
 	return (
-		<Suspense fallback={<div>Loading tokens...</div>}>
-			<TokenListContext.Provider
-				value={{
-					tokens,
-					popularTokens,
-					isLoading,
-					error: error
-						? "Failed to load token list. Using default tokens instead."
-						: null,
-				}}
-			>
-				{children}
-			</TokenListContext.Provider>
-		</Suspense>
+		<TokenListContext.Provider
+			value={{
+				tokens,
+				popularTokens,
+				isLoading,
+				error: error
+					? "Failed to load token list. Using default tokens instead."
+					: null,
+			}}
+		>
+			{children}
+		</TokenListContext.Provider>
 	);
 }
