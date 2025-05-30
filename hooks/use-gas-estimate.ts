@@ -10,6 +10,7 @@ import {
 	WETH_ADDRESS,
 } from "@/lib/constants";
 import type { TokenData } from "@/types/token";
+import { useXRPPrice } from "@/hooks/use-xrp-price";
 
 // Fix JSON bigint encoding
 //@ts-expect-error - fix
@@ -23,16 +24,9 @@ export function useGasEstimate(
 	amountFrom: string,
 	amountTo: string,
 ) {
-	const { address, isConnected } = useAccount();
+	const { address } = useAccount();
 	const publicClient = usePublicClient();
-
-	// Get ETH price in USD (simplified for demo)
-	const ethPriceUsd = 3000; // In a real app, fetch this from an API
-
-	// Get gas price
-	const { data: ethBalance } = useBalance({
-		address,
-	});
+	const { priceUSD: xrpPriceUsd } = useXRPPrice();
 
 	// Create memoized contract params to ensure they update when tokens change
 	const contractParams = useMemo(() => {
@@ -45,25 +39,25 @@ export function useGasEstimate(
 			return null;
 
 		const deadline = BigInt(Math.floor(Date.now() / 1000) + 60 * 20); // 20 minutes deadline
-		const wethAddress = WETH_ADDRESS; // WETH
+		const wethAddress = WETH_ADDRESS; // WXRP
 
 		// Calculate slippage-adjusted minimum output (5% slippage)
 		const slippageFactor = 0.95; // 5% slippage tolerance
 		const amountOutMin = amountTo
 			? BigInt(
-					Math.floor(
-						Number(amountTo) *
-							slippageFactor *
-							10 ** tokenTo.decimals,
-					),
-				)
+				Math.floor(
+					Number(amountTo) *
+					slippageFactor *
+					10 ** tokenTo.decimals,
+				),
+			)
 			: 0n;
 
 		// Parse input amount with correct decimals
 		const parsedAmountFrom = parseUnits(amountFrom, tokenFrom.decimals);
 
 		if (tokenFrom.address === zeroAddress) {
-			// ETH to Token
+			// XRP to Token
 			return {
 				address: UNISWAP_V2_ROUTER,
 				abi: UNISWAP_V2_ROUTER_ABI,
@@ -74,13 +68,13 @@ export function useGasEstimate(
 					address || zeroAddress,
 					deadline,
 				],
-				value: parsedAmountFrom, // Use actual ETH amount
+				value: parsedAmountFrom, // Use actual XRP amount
 				account: address,
 			} as const;
 		}
 
 		if (tokenTo.address === zeroAddress) {
-			// Token to ETH
+			// Token to XRP
 			return {
 				address: UNISWAP_V2_ROUTER,
 				abi: UNISWAP_V2_ROUTER_ABI,
@@ -135,18 +129,24 @@ export function useGasEstimate(
 				throw new Error("Contract parameters not available");
 
 			try {
+				// Create a mutable copy of contract params for gas estimation
+				const gasParams = {
+					...contractParams,
+					args: [...contractParams.args] as any,
+				};
+
 				// First, check if we need to simulate getAmountsOut to get a better amountOutMin
 				if (!amountTo || Number(amountTo) <= 0) {
 					// This is a fallback if amountTo isn't provided
-					const path = contractParams.args[
-						contractParams.functionName === "swapExactETHForTokens"
+					const path = gasParams.args[
+						gasParams.functionName === "swapExactETHForTokens"
 							? 1
 							: 2
 					] as readonly `0x${string}`[];
 					const amountIn =
-						contractParams.functionName === "swapExactETHForTokens"
-							? contractParams.value
-							: contractParams.args[0];
+						gasParams.functionName === "swapExactETHForTokens"
+							? gasParams.value
+							: gasParams.args[0];
 
 					const amounts = await publicClient.readContract({
 						address: UNISWAP_V2_ROUTER,
@@ -162,25 +162,26 @@ export function useGasEstimate(
 
 						// Update the amountOutMin in the args
 						const argsIndex =
-							contractParams.functionName ===
-							"swapExactETHForTokens"
+							gasParams.functionName ===
+								"swapExactETHForTokens"
 								? 0
 								: 1;
-						contractParams.args[argsIndex] = slippageAdjusted;
+						gasParams.args[argsIndex] = slippageAdjusted;
 					}
 				}
 
 				// Now estimate gas with proper values
 				const gasData =
-					await publicClient.estimateContractGas(contractParams);
+					//@ts-expect-error - fix
+					await publicClient.estimateContractGas(gasParams);
 
 				// Calculate gas cost
 				const gasLimit = gasData * 2n; // Double the gas limit for safety
 				const gasPrice = await publicClient.getGasPrice();
-				const gasCostEth = Number(
+				const gasCostXrp = Number(
 					parseEther(((gasLimit * gasPrice) / 10n ** 18n).toString()),
 				);
-				const gasCostUsd = gasCostEth * ethPriceUsd;
+				const gasCostUsd = gasCostXrp * xrpPriceUsd;
 
 				return `~$${gasCostUsd.toFixed(2)}`;
 			} catch (err) {
@@ -229,7 +230,7 @@ export function useAddLiquidityGasEstimate(
 ) {
 	const { address, isConnected } = useAccount();
 	const publicClient = usePublicClient();
-	const ethPriceUsd = 3000;
+	const { priceUSD: xrpPriceUsd } = useXRPPrice();
 
 	const contractParams = useMemo(() => {
 		if (
@@ -279,7 +280,7 @@ export function useAddLiquidityGasEstimate(
 					tokenAmount,
 					tokenAmountMin,
 					ethAmountMin,
-					address,
+					address ?? "0x",
 					deadline,
 				],
 				value: ethAmount,
@@ -299,7 +300,7 @@ export function useAddLiquidityGasEstimate(
 				parsedAmountB,
 				amountAMin,
 				amountBMin,
-				address,
+				address ?? "0x",
 				deadline,
 			],
 			account: address,
@@ -320,15 +321,16 @@ export function useAddLiquidityGasEstimate(
 			try {
 				// Estimate gas with proper values
 				const gasData =
+					//@ts-expect-error - fix
 					await publicClient.estimateContractGas(contractParams);
 
 				// Calculate gas cost - use a lower multiplier for more accurate estimation
 				const gasLimit = (gasData * 12n) / 10n; // Add 20% buffer instead of doubling
 				const gasPrice = await publicClient.getGasPrice();
-				const gasCostEth = Number(
+				const gasCostXrp = Number(
 					parseEther(((gasLimit * gasPrice) / 10n ** 18n).toString()),
 				);
-				const gasCostUsd = gasCostEth * ethPriceUsd;
+				const gasCostUsd = gasCostXrp * xrpPriceUsd;
 
 				return `~$${gasCostUsd.toFixed(2)}`;
 			} catch (err) {
@@ -382,7 +384,7 @@ export function useRemoveLiquidityGasEstimate(
 ) {
 	const { address } = useAccount();
 	const publicClient = usePublicClient();
-	const ethPriceUsd = 3000;
+	const { priceUSD: xrpPriceUsd } = useXRPPrice();
 
 	const contractParams = useMemo(() => {
 		if (
@@ -454,7 +456,7 @@ export function useRemoveLiquidityGasEstimate(
 				parsedLpAmount,
 				0n, // amountAMin (with slippage)
 				0n, // amountBMin (with slippage)
-				address,
+				address ?? "0x",
 				deadline,
 			],
 			account: address,
@@ -475,15 +477,16 @@ export function useRemoveLiquidityGasEstimate(
 			try {
 				// Estimate gas with proper values
 				const gasData =
+					//@ts-expect-error - fix
 					await publicClient.estimateContractGas(contractParams);
 
 				// Calculate gas cost - use a lower multiplier for more accurate estimation
 				const gasLimit = (gasData * 12n) / 10n; // Add 20% buffer instead of doubling
 				const gasPrice = await publicClient.getGasPrice();
-				const gasCostEth = Number(
+				const gasCostXrp = Number(
 					parseEther(((gasLimit * gasPrice) / 10n ** 18n).toString()),
 				);
-				const gasCostUsd = gasCostEth * ethPriceUsd;
+				const gasCostUsd = gasCostXrp * xrpPriceUsd;
 
 				return `~$${gasCostUsd.toFixed(2)}`;
 			} catch (err) {

@@ -6,6 +6,9 @@ export const UNISWAP_V2_FACTORY = env.NEXT_PUBLIC_UNISWAP_V2_FACTORY as Address;
 export const UNISWAP_V2_ROUTER = env.NEXT_PUBLIC_UNISWAP_V2_ROUTER as Address;
 export const WETH_ADDRESS = env.NEXT_PUBLIC_WETH_ADDRESS as Address;
 
+// Token addresses for price calculations
+export const USDC_ADDRESS = "0x925965a6FCe11D0589dAD8972e7e5B8879bCb9ef" as Address;
+
 // ABIs
 export const UNISWAP_V2_ROUTER_ABI = [
 	// Only including the functions we need
@@ -236,6 +239,58 @@ export const UNISWAP_V2_PAIR_ABI = [
 		name: "token0",
 		outputs: [{ internalType: "address", name: "", type: "address" }],
 		stateMutability: "view",
+		type: "function",
+	},
+] as const;
+
+// WXRP ABI - Same as WETH but for XRP wrapping
+export const WXRP_ABI = [
+	{
+		inputs: [],
+		name: "deposit",
+		outputs: [],
+		stateMutability: "payable",
+		type: "function",
+	},
+	{
+		inputs: [{ internalType: "uint256", name: "amount", type: "uint256" }],
+		name: "withdraw",
+		outputs: [],
+		stateMutability: "nonpayable",
+		type: "function",
+	},
+	{
+		inputs: [],
+		name: "decimals",
+		outputs: [{ internalType: "uint8", name: "", type: "uint8" }],
+		stateMutability: "view",
+		type: "function",
+	},
+	{
+		inputs: [{ internalType: "address", name: "account", type: "address" }],
+		name: "balanceOf",
+		outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+		stateMutability: "view",
+		type: "function",
+	},
+	{
+		inputs: [
+			{ internalType: "address", name: "owner", type: "address" },
+			{ internalType: "address", name: "spender", type: "address" },
+		],
+		name: "allowance",
+		outputs: [{ internalType: "uint256", name: "", type: "uint256" }],
+		stateMutability: "view",
+		type: "function",
+	},
+	{
+		inputs: [
+			{ internalType: "address", name: "spender", type: "address" },
+			{ internalType: "uint256", name: "amount", type: "uint256" },
+		],
+		name: "approve",
+		outputs: [{ internalType: "bool", name: "", type: "bool" }],
+		stateMutability: "nonpayable",
 		type: "function",
 	},
 ] as const;

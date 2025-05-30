@@ -1,0 +1,36 @@
+# XRP Integration
+
+Hammy Swap is built to work seamlessly with XRP as the native currency, similar to how Ethereum DEXs work with ETH.
+
+## XRP vs WXRP
+
+### XRP (Native Token)
+- **Symbol**: XRP
+- **Type**: Native blockchain currency
+- **Usage**: Used for gas fees and direct trading
+
+### WXRP (Wrapped XRP)
+- **Symbol**: WXRP  
+- **Type**: ERC20-compatible wrapper contract
+- **Usage**: Used in liquidity pools and DeFi protocols
+
+## ⚠️ Important Restrictions
+
+### Cannot Create XRP/WXRP Pools
+The interface **prevents** creating liquidity pools between XRP and WXRP because:
+- They represent the same underlying asset
+- The conversion is always 1:1 via the WXRP contract
+- No real liquidity provision would occur
+- Could create user confusion
+
+**✅ Instead**: Use the **Swap interface** to convert between XRP and WXRP at 1:1 ratio.
+
+### XRP ↔ WXRP Swaps (Wrap/Unwrap)
+Direct swaps between XRP and WXRP are **supported** and work as follows:
+- **XRP → WXRP**: Uses `deposit()` function (wrapping)
+- **WXRP → XRP**: Uses `withdraw()` function (unwrapping)  
+- **Rate**: Always 1:1 (no slippage, no price impact)
+- **Fees**: No fees for conversion
+- **No approval needed**: XRP swaps don't require token approval
+
+**✅ Use the Swap interface** for XRP ↔ WXRP conversions with a seamless experience.

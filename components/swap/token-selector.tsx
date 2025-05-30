@@ -24,6 +24,8 @@ import Image from "next/image";
 import { useTokenList } from "@/providers/token-list-provider";
 import { zeroAddress, parseEther, formatUnits } from "viem";
 import { xrplevmTestnet } from "viem/chains";
+import { WXRP_ABI } from "@/lib/constants";
+import { env } from "@/lib/utils/env";
 
 interface TokenSelectorProps {
 	open: boolean;
@@ -190,46 +192,62 @@ const TokenRow = React.forwardRef<HTMLDivElement, TokenRowProps>(
 			if (!userAddress || token.address === zeroAddress) return;
 
 			try {
-				const txHash = await writeContractAsync({
-					address: token.address as `0x${string}`,
-					abi: [
-						{
-							inputs: [
-								{
-									internalType: "address",
-									name: "to",
-									type: "address",
-								},
-								{
-									internalType: "uint256",
-									name: "amount",
-									type: "uint256",
-								},
-							],
-							name: "mint",
-							outputs: [],
-							stateMutability: "nonpayable",
-							type: "function",
-						},
-					],
-					functionName: "mint",
-					args: [userAddress, parseEther("100")],
-				});
+				// Check if this is WXRP (should use deposit instead of mint)
+				const isWXRP = token.address === env.NEXT_PUBLIC_WETH_ADDRESS;
 
-				await publicClient?.waitForTransactionReceipt({ hash: txHash });
+				if (isWXRP) {
+					// Use deposit function for WXRP
+					const txHash = await writeContractAsync({
+						address: token.address as `0x${string}`,
+						abi: WXRP_ABI,
+						functionName: "deposit",
+						args: [],
+						value: parseEther("10"), // Send 10 XRP to wrap into WXRP
+					});
+
+					await publicClient?.waitForTransactionReceipt({ hash: txHash });
+				} else {
+					// Use mint function for other tokens
+					const txHash = await writeContractAsync({
+						address: token.address as `0x${string}`,
+						abi: [
+							{
+								inputs: [
+									{
+										internalType: "address",
+										name: "to",
+										type: "address",
+									},
+									{
+										internalType: "uint256",
+										name: "amount",
+										type: "uint256",
+									},
+								],
+								name: "mint",
+								outputs: [],
+								stateMutability: "nonpayable",
+								type: "function",
+							},
+						],
+						functionName: "mint",
+						args: [userAddress, parseEther("100")],
+					});
+
+					await publicClient?.waitForTransactionReceipt({ hash: txHash });
+				}
 
 				await refetch();
 			} catch (error) {
-				console.error("Failed to mint tokens:", error);
+				console.error("Failed to mint/deposit tokens:", error);
 			}
 		};
 
 		return (
 			<div
 				ref={ref}
-				className={`flex items-center justify-between p-3 rounded-lg cursor-pointer token-selector-item keyboard-nav-item ${
-					isFocused ? "bg-amber-200" : ""
-				}`}
+				className={`flex items-center justify-between p-3 rounded-lg cursor-pointer token-selector-item keyboard-nav-item ${isFocused ? "bg-amber-200" : ""
+					}`}
 				onClick={() => onSelect(token)}
 				tabIndex={tabIndex}
 				role="button"
@@ -270,7 +288,10 @@ const TokenRow = React.forwardRef<HTMLDivElement, TokenRowProps>(
 							onClick={handleMint}
 							disabled={isPending || !userAddress}
 						>
-							{isPending ? "Minting..." : "Mint"}
+							{isPending
+								? (token.symbol === "WXRP" ? "Depositing..." : "Minting...")
+								: (token.symbol === "WXRP" ? "Deposit" : "Mint")
+							}
 						</Button>
 					)}
 				</div>

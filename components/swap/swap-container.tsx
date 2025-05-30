@@ -5,9 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAccount } from "wagmi";
 import { TokenInput } from "@/components/swap/token-input";
-import { ArrowDown, Settings, AlertCircle } from "lucide-react";
+import { ArrowDown, Settings, AlertCircle, AlertTriangle } from "lucide-react";
 import type { TokenData } from "@/types/token";
-import { ETH, USDC } from "@/lib/tokens";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SlippageSettings } from "@/components/swap/slippage-settings";
 import { SwapDetails } from "@/components/swap/swap-details";
@@ -18,6 +17,8 @@ import { useGasEstimate } from "@/hooks/use-gas-estimate";
 import { usePriceImpact } from "@/hooks/use-price-impact";
 import { useModal } from "connectkit";
 import { useTokenList } from "@/providers/token-list-provider";
+import { areTokensIdentical, getTokenPairError, isXRPWXRPSwap } from "@/lib/utils";
+import { zeroAddress } from "viem";
 
 export function SwapContainer() {
 	const { address } = useAccount();
@@ -38,6 +39,11 @@ export function SwapContainer() {
 		setTokenFrom(tokens[0]);
 		setTokenTo(tokens[1]);
 	}, [tokens[0], tokens[1]]);
+
+	// Check for invalid token pairs
+	const tokenPairError = getTokenPairError(tokenFrom, tokenTo, 'swap');
+	const isInvalidPair = areTokensIdentical(tokenFrom, tokenTo);
+	const isWrapUnwrapSwap = isXRPWXRPSwap(tokenFrom, tokenTo);
 
 	// Custom hooks
 	const {
@@ -71,7 +77,7 @@ export function SwapContainer() {
 	);
 
 	// Combine all errors
-	const error = priceError || approvalError || swapError || priceImpactError;
+	const error = priceError || approvalError || swapError || priceImpactError || tokenPairError;
 
 	// Update amounts when price changes
 	useEffect(() => {
@@ -144,39 +150,59 @@ export function SwapContainer() {
 		setAmountTo(amountFrom);
 	};
 
-	const handleButtonClick = () => {
+	// Handle swap execution
+	const handleSwap = () => {
 		if (!isConnected) {
 			setOpen(true);
 			return;
 		}
 
-		if (needsApproval) {
-			approveToken?.();
-		} else {
-			tokenFrom &&
-				tokenTo &&
-				executeSwap(tokenFrom, tokenTo, amountFrom, amountTo, slippage);
+		if (isInvalidPair) {
+			return; // Do nothing for invalid pairs
+		}
 
-			setAmountFrom("");
-			setAmountTo("");
+		// For XRP/WXRP swaps, no approval needed
+		if (isWrapUnwrapSwap) {
+			if (amountFrom && amountTo && tokenFrom && tokenTo) {
+				executeSwap(tokenFrom, tokenTo, amountFrom, amountTo, slippage);
+			}
+			return;
+		}
+
+		if (needsApproval) {
+			approveToken();
+			return;
+		}
+
+		if (amountFrom && amountTo && tokenFrom && tokenTo) {
+			executeSwap(tokenFrom, tokenTo, amountFrom, amountTo, slippage);
 		}
 	};
 
-	const getButtonText = () => {
+	const getSwapButtonText = () => {
 		if (!isConnected) return "Connect Wallet";
-		if (!amountFrom || !amountTo) return "Enter an amount";
-		if (tokenFrom?.address === tokenTo?.address)
-			return "Cannot swap same token";
-		if (needsApproval) return "Approve";
+		if (!tokenFrom || !tokenTo) return "Select tokens";
+		if (isInvalidPair) return tokenPairError || "Invalid token pair";
+		if (!amountFrom || Number.parseFloat(amountFrom) === 0)
+			return "Enter amount";
+		if (needsApproval && !isWrapUnwrapSwap) return `Approve ${tokenFrom.symbol}`;
+		if (isWrapUnwrapSwap) {
+			return tokenFrom.address === zeroAddress ? "Wrap XRP" : "Unwrap WXRP";
+		}
 		return "Swap";
 	};
 
-	const isButtonDisabled = () => {
-		if (!isConnected) return false;
-		if (!amountFrom || !amountTo) return true;
-		if (tokenFrom?.address === tokenTo?.address) return true;
-		if (isPriceLoading || isApproving || isSwapping) return true;
-		return false;
+	const isSwapDisabled = () => {
+		return (
+			!amountFrom ||
+			Number.parseFloat(amountFrom) === 0 ||
+			!tokenFrom ||
+			!tokenTo ||
+			isInvalidPair ||
+			isSwapping ||
+			(isApproving && !isWrapUnwrapSwap) ||
+			(!!priceError && !isWrapUnwrapSwap)
+		);
 	};
 
 	return (
@@ -196,61 +222,85 @@ export function SwapContainer() {
 					</Button>
 				</div>
 
-				{error && (
-					<Alert
-						variant="destructive"
-						className="mb-4 bg-red-50 border-red-200"
-					>
-						<AlertCircle className="h-4 w-4" />
-						<AlertDescription>{error}</AlertDescription>
+				{/* Settings panel */}
+				{settingsOpen && (
+					<SlippageSettings
+						open={settingsOpen}
+						onOpenChangeAction={setSettingsOpen}
+						slippage={slippage}
+						onSlippageChangeAction={setSlippage}
+					/>
+				)}
+
+				{/* XRP/WXRP wrap info */}
+				{isWrapUnwrapSwap && (
+					<Alert className="bg-blue-50 border-blue-200">
+						<AlertCircle className="h-4 w-4 text-blue-500" />
+						<AlertDescription className="text-blue-800">
+							<strong>Wrap/Unwrap:</strong> {tokenFrom?.symbol} → {tokenTo?.symbol}
+							<br />
+							<span className="text-blue-600 text-sm mt-1 block">
+								💡 This will directly {tokenFrom?.address === zeroAddress ? 'wrap XRP to WXRP' : 'unwrap WXRP to XRP'} at 1:1 ratio.
+							</span>
+						</AlertDescription>
 					</Alert>
 				)}
 
-				<div className="space-y-3">
-					<TokenInput
-						value={amountFrom}
-						onChange={handleAmountFromChange}
-						token={tokenFrom}
-						onSelectToken={handleTokenFromSelect}
-						label="From"
-						isLoading={activeInput === "to" && isPriceLoading}
-					/>
+				{/* Invalid pair warning - only for identical tokens */}
+				{isInvalidPair && (
+					<Alert className="bg-red-50 border-red-200">
+						<AlertTriangle className="h-4 w-4 text-red-500" />
+						<AlertDescription className="text-red-800">
+							<strong>Invalid Swap:</strong> {tokenPairError}
+						</AlertDescription>
+					</Alert>
+				)}
 
-					<div className="flex justify-center my-1">
-						<Button
-							variant="ghost"
-							size="icon"
-							onClick={handleSwapTokens}
-							className="rounded-full bg-amber-50 hover:bg-amber-100 h-8 w-8 text-amber-600"
-						>
-							<ArrowDown className="h-4 w-4" />
-						</Button>
-					</div>
+				{/* Error alert */}
+				{error && !isInvalidPair && !isWrapUnwrapSwap && (
+					<Alert className="bg-red-50 border-red-200">
+						<AlertCircle className="h-4 w-4 text-red-500" />
+						<AlertDescription className="text-red-800">
+							{error}
+						</AlertDescription>
+					</Alert>
+				)}
 
-					<TokenInput
-						value={amountTo}
-						onChange={handleAmountToChange}
-						token={tokenTo}
-						onSelectToken={handleTokenToSelect}
-						label="To (estimated)"
-						isLoading={activeInput === "from" && isPriceLoading}
-					/>
+				{/* Token inputs */}
+				<TokenInput
+					value={amountFrom}
+					onChange={handleAmountFromChange}
+					token={tokenFrom}
+					onSelectToken={handleTokenFromSelect}
+					isLoading={activeInput === "to" && isPriceLoading}
+				/>
 
-					<div className="pt-3">
-						<Button
-							className="w-full swap-button text-amber-900 rounded-xl py-6 font-medium text-base"
-							onClick={handleButtonClick}
-							disabled={isButtonDisabled()}
-						>
-							{isApproving
-								? "Approving..."
-								: isSwapping
-									? "Swapping..."
-									: getButtonText()}
-						</Button>
-					</div>
+				<div className="flex justify-center my-1">
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={handleSwapTokens}
+						className="rounded-full bg-amber-50 hover:bg-amber-100 h-8 w-8 text-amber-600"
+					>
+						<ArrowDown className="h-4 w-4" />
+					</Button>
+				</div>
 
-					{tokenFrom && tokenTo && amountFrom && amountTo && (
+				<TokenInput
+					value={amountTo}
+					onChange={handleAmountToChange}
+					token={tokenTo}
+					onSelectToken={handleTokenToSelect}
+					isLoading={activeInput === "from" && isPriceLoading}
+				/>
+
+				{/* Swap details */}
+				{tokenFrom &&
+					tokenTo &&
+					amountFrom &&
+					amountTo &&
+					!isPriceLoading &&
+					!isInvalidPair && (
 						<SwapDetails
 							tokenFrom={tokenFrom}
 							tokenTo={tokenTo}
@@ -258,19 +308,24 @@ export function SwapContainer() {
 							amountTo={amountTo}
 							slippage={slippage}
 							gasEstimate={gasEstimate}
-							isGasLoading={isGasLoading ?? false}
+							isGasLoading={isGasLoading || false}
 							priceImpact={priceImpact}
 						/>
 					)}
-				</div>
-			</CardContent>
 
-			<SlippageSettings
-				open={settingsOpen}
-				onOpenChangeAction={setSettingsOpen}
-				slippage={slippage}
-				onSlippageChangeAction={setSlippage}
-			/>
+				{/* Swap button */}
+				<Button
+					className="w-full swap-button text-amber-900 rounded-xl py-6 font-medium text-base"
+					onClick={handleSwap}
+					disabled={isSwapDisabled()}
+				>
+					{isApproving
+						? "Approving..."
+						: isSwapping
+							? "Swapping..."
+							: getSwapButtonText()}
+				</Button>
+			</CardContent>
 		</Card>
 	);
 }

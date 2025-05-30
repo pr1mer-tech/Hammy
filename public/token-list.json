@@ -8,14 +8,33 @@
 	},
 	"tags": {},
 	"logoURI": "ipfs://QmNa8mQkrNKp1WEEeGjFezDmDeodkWRevGFN8JCV7b4Xir",
-	"keywords": ["uniswap", "default"],
+	"keywords": [
+		"uniswap",
+		"default"
+	],
 	"tokens": [
 		{
 			"chainId": 1449000,
-			"address": "0x1a1C2099EC8da6B98D0b1fD93dED956FbE4ed577",
+			"address": "0x0000000000000000000000000000000000000000",
 			"name": "XRP",
 			"symbol": "XRP",
 			"logoURI": "https://assets.coingecko.com/coins/images/44/standard/xrp-symbol-white-128.png",
+			"decimals": 18
+		},
+		{
+			"chainId": 1449000,
+			"address": "0x140c60804F4ad6E71970e3b0990dE7a4af3CA40A",
+			"name": "WXRP",
+			"symbol": "WXRP",
+			"logoURI": "https://assets.coingecko.com/coins/images/44/standard/xrp-symbol-white-128.png",
+			"decimals": 18
+		},
+		{
+			"chainId": 1449000,
+			"address": "0x1a1C2099EC8da6B98D0b1fD93dED956FbE4ed577",
+			"name": "ETH",
+			"symbol": "ETH",
+			"logoURI": "https://assets.coingecko.com/coins/images/279/standard/ethereum.png?1696501628",
 			"decimals": 18
 		},
 		{

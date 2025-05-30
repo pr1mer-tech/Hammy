@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useAccount, usePublicClient, useWriteContract } from "wagmi";
-import { UNISWAP_V2_ROUTER, UNISWAP_V2_ROUTER_ABI } from "@/lib/constants";
+import { UNISWAP_V2_ROUTER, UNISWAP_V2_ROUTER_ABI, WETH_ADDRESS, WXRP_ABI } from "@/lib/constants";
 import { parseUnits, zeroAddress } from "viem";
 import type { TokenData } from "@/types/token";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { isXRPWXRPSwap } from "@/lib/utils";
 
 export function useSwap() {
 	const { address, isConnected } = useAccount();
@@ -40,8 +41,42 @@ export function useSwap() {
 				tokenTo.decimals,
 			);
 
-			// ETH -> Token
-			if (tokenFrom.address === zeroAddress) {
+			// Handle XRP ↔ WXRP swaps with wrap/unwrap functions
+			if (isXRPWXRPSwap(tokenFrom, tokenTo)) {
+				// XRP -> WXRP (wrap)
+				if (tokenFrom.address === zeroAddress && tokenTo.address === WETH_ADDRESS) {
+					const tx = await writeContract({
+						address: WETH_ADDRESS,
+						abi: WXRP_ABI,
+						functionName: "deposit",
+						args: [],
+						value: parsedAmountIn,
+					});
+
+					setTxHash(tx);
+
+					await publicClient?.waitForTransactionReceipt({
+						hash: tx,
+					});
+				}
+				// WXRP -> XRP (unwrap)
+				else if (tokenFrom.address === WETH_ADDRESS && tokenTo.address === zeroAddress) {
+					const tx = await writeContract({
+						address: WETH_ADDRESS,
+						abi: WXRP_ABI,
+						functionName: "withdraw",
+						args: [parsedAmountIn],
+					});
+
+					setTxHash(tx);
+
+					await publicClient?.waitForTransactionReceipt({
+						hash: tx,
+					});
+				}
+			}
+			// XRP -> Token (native XRP to token)
+			else if (tokenFrom.address === zeroAddress) {
 				const tx = await writeContract({
 					address: UNISWAP_V2_ROUTER,
 					abi: UNISWAP_V2_ROUTER_ABI,
@@ -49,7 +84,7 @@ export function useSwap() {
 					args: [
 						parsedAmountOutMin,
 						[
-							"0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", // WETH
+							WETH_ADDRESS, // WXRP address
 							tokenTo.address,
 						],
 						address,
@@ -64,7 +99,7 @@ export function useSwap() {
 					hash: tx,
 				});
 			}
-			// Token -> ETH
+			// Token -> XRP (token to native XRP)
 			else if (tokenTo.address === zeroAddress) {
 				const tx = await writeContract({
 					address: UNISWAP_V2_ROUTER,
@@ -75,7 +110,7 @@ export function useSwap() {
 						parsedAmountOutMin,
 						[
 							tokenFrom.address,
-							"0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", // WETH
+							WETH_ADDRESS, // WXRP address
 						],
 						address,
 						deadline,

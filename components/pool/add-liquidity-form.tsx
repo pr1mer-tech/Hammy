@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { TokenInput } from "@/components/swap/token-input";
 import type { TokenData } from "@/types/token";
-import { Plus, Info, ChartPie } from "lucide-react";
+import { Plus, Info, ChartPie, AlertTriangle } from "lucide-react";
 import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 import {
 	UNISWAP_V2_ROUTER,
@@ -19,7 +19,7 @@ import { useProportionalAmounts } from "@/hooks/use-proportional-amounts";
 import { useAddLiquidityGasEstimate } from "@/hooks/use-gas-estimate";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { GasIcon, SwapIcon } from "@/components/ui/icons";
-import { cn } from "@/lib/utils";
+import { cn, areTokensSameAssetForPool, getTokenPairError } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -99,6 +99,10 @@ export function AddLiquidityForm({
 	const queryClient = useQueryClient();
 	const { gasEstimate, isLoading: isGasEstimateLoading } =
 		useAddLiquidityGasEstimate(tokenA, tokenB, amountA, amountB);
+
+	// Check for invalid token pairs
+	const tokenPairError = getTokenPairError(tokenA, tokenB, 'pool');
+	const isInvalidPair = areTokensSameAssetForPool(tokenA, tokenB);
 
 	// Calculate pool share
 	useEffect(() => {
@@ -223,7 +227,7 @@ export function AddLiquidityForm({
 	};
 
 	const needsApproval = () => {
-		// Native ETH doesn't need approval
+		// Native XRP doesn't need approval
 		if (
 			tokenA?.address === zeroAddress &&
 			tokenB?.address === zeroAddress
@@ -231,11 +235,11 @@ export function AddLiquidityForm({
 			return false;
 		}
 
-		// Check if tokenA needs approval (if it's not ETH)
+		// Check if tokenA needs approval (if it's not XRP)
 		const needsApprovalForA =
 			tokenA?.address !== zeroAddress && needsApprovalA;
 
-		// Check if tokenB needs approval (if it's not ETH)
+		// Check if tokenB needs approval (if it's not XRP)
 		const needsApprovalForB =
 			tokenB?.address !== zeroAddress && needsApprovalB;
 
@@ -277,15 +281,15 @@ export function AddLiquidityForm({
 			const amountAMin = BigInt(Number(parsedAmountA) * slippageFactor);
 			const amountBMin = BigInt(Number(parsedAmountB) * slippageFactor);
 
-			// ETH + Token
+			// XRP + Token
 			if (
 				tokenA?.address === zeroAddress ||
 				tokenB?.address === zeroAddress
 			) {
-				const ethToken =
+				const xrpToken =
 					tokenA?.address === zeroAddress ? tokenA : tokenB;
 				const token = tokenA?.address === zeroAddress ? tokenB : tokenA;
-				const ethAmount =
+				const xrpAmount =
 					tokenA?.address === zeroAddress
 						? parsedAmountA
 						: parsedAmountB;
@@ -295,7 +299,7 @@ export function AddLiquidityForm({
 						: parsedAmountA;
 				const tokenAmountMin =
 					tokenA?.address === zeroAddress ? amountBMin : amountAMin;
-				const ethAmountMin =
+				const xrpAmountMin =
 					tokenA?.address === zeroAddress ? amountAMin : amountBMin;
 
 				const tx = await writeContract({
@@ -306,11 +310,11 @@ export function AddLiquidityForm({
 						token?.address as `0x${string}`,
 						tokenAmount,
 						tokenAmountMin,
-						ethAmountMin,
+						xrpAmountMin,
 						address,
 						deadline,
 					],
-					value: ethAmount,
+					value: xrpAmount,
 				});
 
 				await publicClient?.waitForTransactionReceipt({
@@ -367,7 +371,7 @@ export function AddLiquidityForm({
 	const getAddButtonText = () => {
 		if (!isConnected) return "Connect Wallet";
 		if (!amountA || !amountB) return "Enter amounts";
-		if (tokenA?.address === tokenB?.address) return "Cannot add same token";
+		if (isInvalidPair) return tokenPairError || "Invalid token pair";
 		if (needsApproval()) return "Approve";
 
 		if (!poolExists) {
@@ -383,6 +387,10 @@ export function AddLiquidityForm({
 			return;
 		}
 
+		if (isInvalidPair) {
+			return; // Do nothing for invalid pairs
+		}
+
 		if (needsApproval()) {
 			handleApprove();
 		} else {
@@ -393,7 +401,7 @@ export function AddLiquidityForm({
 	const isAddButtonDisabled = () => {
 		if (!isConnected) return false;
 		if (!amountA || !amountB) return true;
-		if (tokenA?.address === tokenB?.address) return true;
+		if (isInvalidPair) return true;
 		if (
 			isProportionalAmountALoading ||
 			isProportionalAmountBLoading ||
@@ -420,7 +428,22 @@ export function AddLiquidityForm({
 
 	return (
 		<div className="space-y-3">
-			{!isPoolCheckLoading && !poolExists && (
+			{/* Invalid pair warning */}
+			{isInvalidPair && (
+				<Alert className="mb-4 bg-red-50 border-red-200">
+					<AlertTriangle className="h-4 w-4 text-red-500" />
+					<AlertDescription className="text-red-800">
+						<strong>Invalid Pair:</strong> {tokenPairError}
+						<br />
+						<span className="text-red-600 text-sm mt-1 block">
+							💡 XRP and WXRP represent the same asset. Use the Wrap interface to convert between them.
+						</span>
+					</AlertDescription>
+				</Alert>
+			)}
+
+			{/* Existing pool creation alert */}
+			{!isPoolCheckLoading && !poolExists && !isInvalidPair && (
 				<Alert className="mb-4 bg-amber-50 border-amber-200">
 					<Info className="h-4 w-4 text-amber-500" />
 					<AlertDescription className="text-amber-800">
@@ -474,7 +497,7 @@ export function AddLiquidityForm({
 				</Button>
 			</div>
 
-			{tokenA && tokenB && amountA && amountB && (
+			{tokenA && tokenB && amountA && amountB && !isInvalidPair && (
 				<div className="mt-3 text-sm text-amber-700 bg-amber-50 rounded-lg p-3">
 					<div
 						className="flex justify-between items-center cursor-pointer hover:bg-amber-100 p-1 -mx-1 rounded-md transition-colors"

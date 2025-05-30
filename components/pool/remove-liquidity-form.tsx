@@ -278,7 +278,7 @@ export function RemoveLiquidityForm({
 				Math.floor(Number(expectedAmountB) * slippageFactor),
 			);
 
-			// ETH + Token
+			// XRP + Token
 			let txHash: `0x${string}`;
 			if (
 				tokenA?.address === zeroAddress ||
@@ -287,7 +287,7 @@ export function RemoveLiquidityForm({
 				const token = tokenA?.address === zeroAddress ? tokenB : tokenA;
 				const tokenMin =
 					tokenA?.address === zeroAddress ? amountBMin : amountAMin;
-				const ethMin =
+				const xrpMin =
 					tokenA?.address === zeroAddress ? amountAMin : amountBMin;
 
 				txHash = await writeContract({
@@ -298,7 +298,7 @@ export function RemoveLiquidityForm({
 						token?.address ?? zeroAddress,
 						parsedLpAmount,
 						tokenMin, // amountTokenMin (with slippage)
-						ethMin, // amountETHMin (with slippage)
+						xrpMin, // amountXRPMin (with slippage)
 						address,
 						deadline,
 					],
@@ -370,9 +370,9 @@ export function RemoveLiquidityForm({
 	return (
 		<div className="space-y-3">
 			{pairAddress &&
-			pairAddress !== zeroAddress &&
-			lpBalance &&
-			BigInt(lpBalance.toString()) > 0 ? (
+				pairAddress !== zeroAddress &&
+				lpBalance &&
+				BigInt(lpBalance.toString()) > 0 ? (
 				<>
 					<div
 						className={`p-4 border ${selectedPosition ? "border-amber-300" : "border-amber-100"} rounded-lg ${selectedPosition ? "bg-amber-50" : "bg-amber-50/50"}`}

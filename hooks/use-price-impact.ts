@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { formatUnits, parseUnits } from "viem";
 import type { TokenData } from "@/types/token";
 import { usePoolExists } from "@/hooks/use-pool-exists";
+import { WETH_ADDRESS } from "@/lib/constants";
+import { isXRPWXRPSwap } from "@/lib/utils";
 
 /**
  * Hook to calculate the price impact of a swap
@@ -20,6 +22,9 @@ export function usePriceImpact(
 	const [priceImpact, setPriceImpact] = useState<number>(0);
 	const [isLoading, setIsLoading] = useState<boolean>(false);
 	const [error, setError] = useState<string | null>(null);
+
+	// Check if this is an XRP/WXRP swap (0% impact)
+	const isWrapUnwrapSwap = isXRPWXRPSwap(tokenFrom, tokenTo);
 
 	// Get pool data
 	const {
@@ -42,6 +47,13 @@ export function usePriceImpact(
 			setError(null);
 			setPriceImpact(0);
 
+			// XRP/WXRP swaps have 0% price impact (1:1 conversion)
+			if (isWrapUnwrapSwap) {
+				setPriceImpact(0);
+				setIsLoading(false);
+				return;
+			}
+
 			// Skip calculation if inputs are invalid
 			if (
 				!amountFrom ||
@@ -62,9 +74,8 @@ export function usePriceImpact(
 				// Determine token order in the pool
 				const isTokenFromToken0 =
 					token0Address?.toLowerCase() ===
-					(tokenFrom.address ===
-					"0x0000000000000000000000000000000000000000"
-						? "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+					(tokenFrom.address === "0x0000000000000000000000000000000000000000"
+						? WETH_ADDRESS // Use WXRP address instead of Ethereum WETH
 						: tokenFrom.address
 					).toLowerCase();
 
@@ -91,10 +102,10 @@ export function usePriceImpact(
 					spotPrice =
 						decimalsDiff > 0
 							? Number(reserveTo) /
-								Number(reserveFrom) /
-								adjustmentFactor
+							Number(reserveFrom) /
+							adjustmentFactor
 							: (Number(reserveTo) / Number(reserveFrom)) *
-								adjustmentFactor;
+							adjustmentFactor;
 				}
 
 				// Calculate execution price
@@ -141,6 +152,7 @@ export function usePriceImpact(
 		tokenFrom,
 		tokenTo,
 		isPoolLoading,
+		isWrapUnwrapSwap,
 	]);
 
 	return { priceImpact, isLoading, error };
