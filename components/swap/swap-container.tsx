@@ -17,14 +17,18 @@ import { useGasEstimate } from "@/hooks/use-gas-estimate";
 import { usePriceImpact } from "@/hooks/use-price-impact";
 import { useModal } from "connectkit";
 import { useTokenList } from "@/providers/token-list-provider";
-import { areTokensIdentical, getTokenPairError, isXRPWXRPSwap } from "@/lib/utils";
+import {
+	areTokensIdentical,
+	getTokenPairError,
+	isXRPWXRPSwap,
+} from "@/lib/utils";
 import { zeroAddress } from "viem";
 
 export function SwapContainer() {
 	const { address } = useAccount();
 	const isConnected = address !== undefined;
 	const { setOpen } = useModal();
-	const { tokens } = useTokenList();
+	const { tokens, isLoading: isTokenListLoading } = useTokenList();
 	const [tokenFrom, setTokenFrom] = useState<TokenData | undefined>(
 		tokens[0],
 	);
@@ -36,12 +40,13 @@ export function SwapContainer() {
 	const [activeInput, setActiveInput] = useState<"from" | "to">("from");
 
 	useEffect(() => {
+		if (tokens.length <= 3) return;
 		setTokenFrom(tokens[0]);
-		setTokenTo(tokens[1]);
-	}, [tokens[0], tokens[1]]);
+		setTokenTo(tokens[2]);
+	}, [tokens[0], tokens[2]]);
 
 	// Check for invalid token pairs
-	const tokenPairError = getTokenPairError(tokenFrom, tokenTo, 'swap');
+	const tokenPairError = getTokenPairError(tokenFrom, tokenTo, "swap");
 	const isInvalidPair = areTokensIdentical(tokenFrom, tokenTo);
 	const isWrapUnwrapSwap = isXRPWXRPSwap(tokenFrom, tokenTo);
 
@@ -77,7 +82,12 @@ export function SwapContainer() {
 	);
 
 	// Combine all errors
-	const error = priceError || approvalError || swapError || priceImpactError || tokenPairError;
+	const error =
+		priceError ||
+		approvalError ||
+		swapError ||
+		priceImpactError ||
+		tokenPairError;
 
 	// Update amounts when price changes
 	useEffect(() => {
@@ -185,9 +195,12 @@ export function SwapContainer() {
 		if (isInvalidPair) return tokenPairError || "Invalid token pair";
 		if (!amountFrom || Number.parseFloat(amountFrom) === 0)
 			return "Enter amount";
-		if (needsApproval && !isWrapUnwrapSwap) return `Approve ${tokenFrom.symbol}`;
+		if (needsApproval && !isWrapUnwrapSwap)
+			return `Approve ${tokenFrom.symbol}`;
 		if (isWrapUnwrapSwap) {
-			return tokenFrom.address === zeroAddress ? "Wrap XRP" : "Unwrap WXRP";
+			return tokenFrom.address === zeroAddress
+				? "Wrap XRP"
+				: "Unwrap WXRP";
 		}
 		return "Swap";
 	};
@@ -207,7 +220,7 @@ export function SwapContainer() {
 
 	return (
 		<Card className="card-gradient rounded-2xl border-0 overflow-hidden">
-			<CardContent className="p-5">
+			<CardContent className="p-5 space-y-4 flex-col">
 				<div className="flex justify-between items-center mb-4">
 					<h2 className="text-xl font-semibold text-amber-800">
 						Swap
@@ -237,10 +250,15 @@ export function SwapContainer() {
 					<Alert className="bg-blue-50 border-blue-200">
 						<AlertCircle className="h-4 w-4 text-blue-500" />
 						<AlertDescription className="text-blue-800">
-							<strong>Wrap/Unwrap:</strong> {tokenFrom?.symbol} → {tokenTo?.symbol}
+							<strong>Wrap/Unwrap:</strong> {tokenFrom?.symbol} →{" "}
+							{tokenTo?.symbol}
 							<br />
 							<span className="text-blue-600 text-sm mt-1 block">
-								💡 This will directly {tokenFrom?.address === zeroAddress ? 'wrap XRP to WXRP' : 'unwrap WXRP to XRP'} at 1:1 ratio.
+								💡 This will directly{" "}
+								{tokenFrom?.address === zeroAddress
+									? "wrap XRP to WXRP"
+									: "unwrap WXRP to XRP"}{" "}
+								at 1:1 ratio.
 							</span>
 						</AlertDescription>
 					</Alert>
@@ -257,14 +275,17 @@ export function SwapContainer() {
 				)}
 
 				{/* Error alert */}
-				{error && !isInvalidPair && !isWrapUnwrapSwap && (
-					<Alert className="bg-red-50 border-red-200">
-						<AlertCircle className="h-4 w-4 text-red-500" />
-						<AlertDescription className="text-red-800">
-							{error}
-						</AlertDescription>
-					</Alert>
-				)}
+				{error &&
+					!isInvalidPair &&
+					!isWrapUnwrapSwap &&
+					!isTokenListLoading && (
+						<Alert className="bg-red-50 border-red-200">
+							<AlertCircle className="h-4 w-4 text-red-500" />
+							<AlertDescription className="text-red-800">
+								{error}
+							</AlertDescription>
+						</Alert>
+					)}
 
 				{/* Token inputs */}
 				<TokenInput
