@@ -26,8 +26,8 @@ export function PoolContainer() {
 		if (!tokenA && tokens.length > 0) {
 			setTokenA(tokens[0]);
 		}
-		if (!tokenB && tokens.length > 1) {
-			setTokenB(tokens[1]);
+		if (!tokenB && tokens.length > 2) {
+			setTokenB(tokens[2]);
 		}
 	}, [tokens, tokenA, tokenB, setTokenA, setTokenB]);
 
