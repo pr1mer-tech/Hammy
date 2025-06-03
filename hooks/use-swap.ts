@@ -162,6 +162,26 @@ export function useSwap() {
 		amountTo: string,
 		slippage: number,
 	) => {
+		// Check if this is a wrap/unwrap operation
+		const isWrapUnwrapOperation = isXRPWXRPSwap(tokenFrom, tokenTo);
+		const isWrapping = isWrapUnwrapOperation && tokenFrom.address === zeroAddress;
+
+		let loadingMessage = "Swapping...";
+		let successMessage = "Swap successful!";
+		let errorMessage = "Swap failed. Please try again.";
+
+		if (isWrapUnwrapOperation) {
+			if (isWrapping) {
+				loadingMessage = "Wrapping...";
+				successMessage = "Wrap successful!";
+				errorMessage = "Wrap failed. Please try again.";
+			} else {
+				loadingMessage = "Unwrapping...";
+				successMessage = "Unwrap successful!";
+				errorMessage = "Unwrap failed. Please try again.";
+			}
+		}
+
 		toast.promise(
 			async () => {
 				await _executeSwap(
@@ -173,9 +193,9 @@ export function useSwap() {
 				);
 			},
 			{
-				loading: "Swapping...",
-				success: "Swap successful!",
-				error: "Swap failed. Please try again.",
+				loading: loadingMessage,
+				success: successMessage,
+				error: errorMessage,
 			},
 		);
 	};

@@ -68,7 +68,7 @@ export function TokenInput({
 							{Number.parseFloat(balanceData.formatted).toFixed(
 								6,
 							)}{" "}
-							{balanceData.symbol}
+							{token?.symbol}
 						</span>
 						<Button
 							variant="ghost"

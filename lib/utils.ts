@@ -62,7 +62,7 @@ export function getTokenPairError(tokenA: TokenData | undefined, tokenB: TokenDa
       (tokenA.address === WETH_ADDRESS && tokenB.address === zeroAddress);
 
     if (isXRPAndWXRP) {
-      return "Cannot create pool between XRP and WXRP - they represent the same asset";
+      return "Cannot create pool between XRP and WXRP - they represent the same asset.";
     }
   }
 

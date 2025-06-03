@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { TokenData } from "@/types/token";
 import { SwapIcon, SlippageIcon, GasIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/utils";
+import { isXRPWXRPSwap } from "@/lib/utils";
 
 interface SwapDetailsProps {
 	tokenFrom: TokenData;
@@ -28,6 +29,9 @@ export function SwapDetails({
 }: SwapDetailsProps) {
 	// State to track if rate is inverted
 	const [isRateInverted, setIsRateInverted] = useState(false);
+
+	// Check if this is a wrap/unwrap operation
+	const isWrapUnwrapSwap = isXRPWXRPSwap(tokenFrom, tokenTo);
 
 	// Calculate normal and inverted rates
 	const normalRate =
@@ -117,12 +121,15 @@ export function SwapDetails({
 				<span
 					className={cn(
 						"font-medium",
-						getPriceImpactColor(priceImpact),
+						isWrapUnwrapSwap ? "text-green-600" : getPriceImpactColor(priceImpact),
 					)}
 				>
-					{priceImpact < 0.01
-						? "<0.01%"
-						: `${priceImpact.toFixed(2)}%`}
+					{isWrapUnwrapSwap
+						? "0%"
+						: priceImpact < 0.01
+							? "<0.01%"
+							: `${priceImpact.toFixed(2)}%`
+					}
 				</span>
 			</div>
 		</div>

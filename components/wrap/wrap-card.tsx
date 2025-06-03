@@ -126,13 +126,13 @@ export function WrapCard() {
                     </TabsList>
 
                     <TabsContent value="wrap" className="space-y-4 mt-4">
-                        <div className="text-center text-sm text-amber-700 mb-4">
+                        <div className="text-left text-sm text-amber-700 mb-4">
                             Convert XRP to WXRP for trading
                         </div>
                     </TabsContent>
 
                     <TabsContent value="unwrap" className="space-y-4 mt-4">
-                        <div className="text-center text-sm text-amber-700 mb-4">
+                        <div className="text-left text-sm text-amber-700 mb-4">
                             Convert WXRP back to XRP
                         </div>
                     </TabsContent>

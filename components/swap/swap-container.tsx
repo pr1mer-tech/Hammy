@@ -219,7 +219,7 @@ export function SwapContainer() {
 	};
 
 	return (
-		<Card className="card-gradient rounded-2xl border-0 overflow-hidden">
+		<Card className="card-gradient rounded-2xl border-0 overflow-hidden md:min-w-[450px]">
 			<CardContent className="p-5 space-y-4 flex-col">
 				<div className="flex justify-between items-center mb-4">
 					<h2 className="text-xl font-semibold text-amber-800">
@@ -247,7 +247,7 @@ export function SwapContainer() {
 
 				{/* XRP/WXRP wrap info */}
 				{isWrapUnwrapSwap && (
-					<Alert className="bg-blue-50 border-blue-200">
+					<Alert className="bg-blue-50 border-blue-200 min-h-[80px] text-left">
 						<AlertCircle className="h-4 w-4 text-blue-500" />
 						<AlertDescription className="text-blue-800">
 							<strong>Wrap/Unwrap:</strong> {tokenFrom?.symbol} →{" "}
@@ -343,7 +343,9 @@ export function SwapContainer() {
 					{isApproving
 						? "Approving..."
 						: isSwapping
-							? "Swapping..."
+							? isWrapUnwrapSwap
+								? (tokenFrom?.address === zeroAddress ? "Wrapping..." : "Unwrapping...")
+								: "Swapping..."
 							: getSwapButtonText()}
 				</Button>
 			</CardContent>
