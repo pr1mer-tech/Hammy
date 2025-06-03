@@ -1,24 +1,34 @@
-## Introduction
+# Introduction
 
-<img
-	src="/images/Hammy_introduction.webp"
-	loading="lazy"
-	alt="Hammy"
-	style={{
-		width: "57.5%",
-		height: "auto",
-		display: "block",
-		marginLeft: "auto",
-		marginRight: "5%",
-	}}
+<img 
+  src="/images/Hammy_introduction.webp" 
+  loading="lazy"
+  alt="Hammy" 
+  style={{
+    width: "57.5%",
+    height: "auto",
+    display: "block",
+    marginLeft: "auto",
+    marginRight: "5%",
+  }} 
 />
 
 The initial design of Hammy Swap is based on the Uniswap v2 constant-product automated market maker (AMM). Since the XRPL EVM Sidechain is still in its early stages, this design simplifies the experience for early adopters. Additionally, a Uniswap v2 AMM will rapidly attract arbitrage bots, which are vital for ensuring price consistency and market equilibrium.
 
 Once the market is mature, we will add Uniswap v3 concentrated-liquidity AMM to enhance market fluidity and reduce slippage. This new version will be complemented by advanced liquidity management tools, including:
-
-- Auto-range:If the market price moves outside the predefined ranges of the liquidity providers, the liquidity ceases to contribute to the market and they stop earning transaction fees. To remedy this, liquidity providers must regularly adjust their price ranges. The Auto-range service will automate this process, ensuring the liquidity remains active and continues to generate fees.
-- Auto-exit:Liquidity provision carries inherent risks, notably impermanent loss under high market volatility conditions. The Auto-exit service will automatically withdraw liquidity at predetermined price levels, helping to mitigate these risks and protect investments.
-- Auto-compounding:While auto-compounding is naturally integrated into the Uniswap v2 AMM, Uniswap v3 requires liquidity providers to manually reinvest accrued fees. Our Auto-compounding service will automate the reinvestment process, optimizing returns seamlessly.
+* Auto-range:If the market price moves outside the predefined ranges of the liquidity providers, the liquidity ceases to contribute to the market and they stop earning transaction fees. To remedy this, liquidity providers must regularly adjust their price ranges. The Auto-range service will automate this process, ensuring the liquidity remains active and continues to generate fees.
+* Auto-exit:Liquidity provision carries inherent risks, notably impermanent loss under high market volatility conditions. The Auto-exit service will automatically withdraw liquidity at predetermined price levels, helping to mitigate these risks and protect investments.
+* Auto-compounding:While auto-compounding is naturally integrated into the Uniswap v2 AMM, Uniswap v3 requires liquidity providers to manually reinvest accrued fees. Our Auto-compounding service will automate the reinvestment process, optimizing returns seamlessly.
 
 There is a 0.3% fee for swapping tokens, where 0.25% is split proportionally among liquidity providers according to their contribution to the liquidity reserves, and 0.05% is charged by Hammy.
+
+
+
+
+
+
+
+
+
+
+

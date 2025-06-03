@@ -12,7 +12,7 @@ export default defineConfig({
 			link: "/swap",
 		},
 		{
-			text: "💧 Liquidity provision",
+			text: "💧 Liquidity management",
 			link: "/liquidity",
 		},
 		{
