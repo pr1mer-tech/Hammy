@@ -22,17 +22,17 @@ export default function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body className={`${inter.className} gradient-bg min-h-screen`}>
-				<Providers>
-					<PostHogProvider>
-						<div className="flex flex-col min-h-screen">
-							<Header />
-							<main className="flex-1 mx-auto w-full px-0 py-6">
-								{children}
-							</main>
-							<Footer />
-						</div>
-					</PostHogProvider>
-				</Providers>
+				{/* <Providers> */}
+				<PostHogProvider>
+					<div className="flex flex-col min-h-screen">
+						{/* <Header /> */}
+						<main className="flex-1 mx-auto w-full px-0 py-6">
+							{children}
+						</main>
+						<Footer />
+					</div>
+				</PostHogProvider>
+				{/* </Providers> */}
 				<Toaster richColors />
 			</body>
 		</html>
@@ -40,4 +40,3 @@ export default function RootLayout({
 }
 
 import "./globals.css";
-import { Toast } from "@radix-ui/react-toast";
