@@ -205,7 +205,9 @@ const TokenRow = React.forwardRef<HTMLDivElement, TokenRowProps>(
 						value: parseEther("10"), // Send 10 XRP to wrap into WXRP
 					});
 
-					await publicClient?.waitForTransactionReceipt({ hash: txHash });
+					await publicClient?.waitForTransactionReceipt({
+						hash: txHash,
+					});
 				} else {
 					// Use mint function for other tokens
 					const txHash = await writeContractAsync({
@@ -234,7 +236,9 @@ const TokenRow = React.forwardRef<HTMLDivElement, TokenRowProps>(
 						args: [userAddress, parseEther("100")],
 					});
 
-					await publicClient?.waitForTransactionReceipt({ hash: txHash });
+					await publicClient?.waitForTransactionReceipt({
+						hash: txHash,
+					});
 				}
 
 				await refetch();
@@ -246,8 +250,9 @@ const TokenRow = React.forwardRef<HTMLDivElement, TokenRowProps>(
 		return (
 			<div
 				ref={ref}
-				className={`flex items-center justify-between p-3 rounded-lg cursor-pointer token-selector-item keyboard-nav-item ${isFocused ? "bg-amber-200" : ""
-					}`}
+				className={`flex items-center justify-between p-3 rounded-lg cursor-pointer token-selector-item keyboard-nav-item ${
+					isFocused ? "bg-amber-200" : ""
+				}`}
 				onClick={() => onSelect(token)}
 				tabIndex={tabIndex}
 				role="button"
@@ -280,20 +285,26 @@ const TokenRow = React.forwardRef<HTMLDivElement, TokenRowProps>(
 							{token.name}
 						</div>
 					</div>
-					{isXrplEvmTestnet && token.address !== zeroAddress && (
-						<Button
-							variant="outline"
-							size="sm"
-							className="ml-2 text-xs bg-amber-100 hover:bg-amber-200 border-amber-300 text-amber-800"
-							onClick={handleMint}
-							disabled={isPending || !userAddress}
-						>
-							{isPending
-								? (token.symbol === "WXRP" ? "Depositing..." : "Minting...")
-								: (token.symbol === "WXRP" ? "Deposit" : "Mint")
-							}
-						</Button>
-					)}
+					{isXrplEvmTestnet &&
+						token.address !== zeroAddress &&
+						token.address !==
+							"0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" && (
+							<Button
+								variant="outline"
+								size="sm"
+								className="ml-2 text-xs bg-amber-100 hover:bg-amber-200 border-amber-300 text-amber-800"
+								onClick={handleMint}
+								disabled={isPending || !userAddress}
+							>
+								{isPending
+									? token.symbol === "WXRP"
+										? "Depositing..."
+										: "Minting..."
+									: token.symbol === "WXRP"
+										? "Deposit"
+										: "Mint"}
+							</Button>
+						)}
 				</div>
 				<div className="flex items-center gap-2">
 					{balance && (
