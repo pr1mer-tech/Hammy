@@ -23,7 +23,7 @@ const connectKitConfig = getDefaultConfig({
   appName: "Hammy Swap",
   walletConnectProjectId:
     process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "demo",
-  chains: [xrplevmMainnet, xrplevmTestnet],
+  chains: [xrplevmMainnet, xrplevmTestnet, mainnet],
   transports: {
     [xrplevmMainnet.id]: http(),
     [xrplevmTestnet.id]: http(),
