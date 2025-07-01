@@ -56,7 +56,15 @@
       "name": "Wrapped Bitcoin",
       "symbol": "WBTC",
       "logoURI": "https://assets.coingecko.com/coins/images/7598/standard/wrapped_bitcoin_wbtc.png",
-      "decimals": 18
+      "decimals": 8
+    },
+    {
+      "chainId": 1440000,
+      "address": "0xa16148c6Ac9EDe0D82f0c52899e22a575284f131",
+      "name": "USD Coin",
+      "symbol": "USDC",
+      "logoURI": "https://assets.coingecko.com/coins/images/6319/standard/usdc.png",
+      "decimals": 6
     },
     {
       "chainId": 1440000,
@@ -72,15 +80,7 @@
       "name": "Tether",
       "symbol": "USDT",
       "logoURI": "https://assets.coingecko.com/coins/images/325/standard/Tether.png",
-      "decimals": 18
-    },
-    {
-      "chainId": 1440000,
-      "address": "0xa16148c6Ac9EDe0D82f0c52899e22a575284f131",
-      "name": "USD Coin",
-      "symbol": "USDC",
-      "logoURI": "https://assets.coingecko.com/coins/images/6319/standard/usdc.png",
-      "decimals": 18
+      "decimals": 6
     },
     {
       "chainId": 1440000,
@@ -112,7 +112,7 @@
       "name": "USD Coin (Noble)",
       "symbol": "USDC",
       "logoURI": "https://assets.coingecko.com/coins/images/6319/standard/usdc.png",
-      "decimals": 18
+      "decimals": 6
     },
     {
       "chainId": 1440000,
