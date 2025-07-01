@@ -5,6 +5,7 @@ import type React from "react";
 import {
   WagmiProvider,
   createConfig,
+  mock,
   useAccount,
   useChains,
   useSwitchChain,
@@ -12,18 +13,45 @@ import {
 import { mainnet, xrplevmTestnet } from "wagmi/chains";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/components/ui/theme-provider";
-import { ConnectKitProvider, getDefaultConfig } from "connectkit";
+import {
+  ConnectKitProvider,
+  getDefaultConfig,
+  getDefaultConnectors,
+} from "connectkit";
 import { http } from "viem";
 import { TokenListProvider } from "@/providers/token-list-provider";
 import { useEffect } from "react";
 import { xrplevmMainnet } from "./xrplevm";
 
 const queryClient = new QueryClient();
+
+const devWalletConnectors =
+  process.env.VERCEL_ENV !== "production"
+    ? [
+        mock({
+          accounts: ["0x8C407cc9395540F32F726884cDdB2a4e06822bd7"],
+        }),
+      ]
+    : [];
+
+export const connectors = [
+  ...getDefaultConnectors({
+    app: {
+      name: "Hammy Swap",
+    },
+    walletConnectProjectId:
+      process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "demo",
+    enableFamily: true,
+  }),
+  ...devWalletConnectors,
+];
+
 const connectKitConfig = getDefaultConfig({
   appName: "Hammy Swap",
   walletConnectProjectId:
     process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "demo",
   chains: [xrplevmMainnet, xrplevmTestnet, mainnet],
+  connectors,
   transports: {
     [xrplevmMainnet.id]: http(),
     [xrplevmTestnet.id]: http(),
