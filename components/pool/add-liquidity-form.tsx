@@ -22,6 +22,7 @@ import { GasIcon, SwapIcon } from "@/components/ui/icons";
 import { cn, areTokensSameAssetForPool, getTokenPairError } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { sortTokens } from "@/lib/utils/sort-tokens";
 
 interface AddLiquidityFormProps {
   tokenA: TokenData | undefined;
@@ -310,17 +311,33 @@ export function AddLiquidityForm({
       }
       // Token + Token
       else {
+        // Sort tokens to ensure consistent ordering
+        const sortedTokens = sortTokens(tokenA, tokenB, amountA, amountB);
+        if (!sortedTokens || !sortedTokens.token0 || !sortedTokens.token1)
+          throw new Error("Invalid token configuration");
+
+        const parsedAmount0 = parseUnits(
+          sortedTokens.amount0,
+          sortedTokens.token0.decimals ?? 18,
+        );
+        const parsedAmount1 = parseUnits(
+          sortedTokens.amount1,
+          sortedTokens.token1.decimals ?? 18,
+        );
+        const amount0Min = (parsedAmount0 * BigInt(995)) / BigInt(1000);
+        const amount1Min = (parsedAmount1 * BigInt(995)) / BigInt(1000);
+
         const tx = await writeContract({
           address: UNISWAP_V2_ROUTER as `0x${string}`,
           abi: UNISWAP_V2_ROUTER_ABI,
           functionName: "addLiquidity",
           args: [
-            tokenA?.address as `0x${string}`,
-            tokenB?.address as `0x${string}`,
-            parsedAmountA,
-            parsedAmountB,
-            amountAMin,
-            amountBMin,
+            sortedTokens.token0.address as `0x${string}`,
+            sortedTokens.token1.address as `0x${string}`,
+            parsedAmount0,
+            parsedAmount1,
+            amount0Min,
+            amount1Min,
             address,
             deadline,
           ],

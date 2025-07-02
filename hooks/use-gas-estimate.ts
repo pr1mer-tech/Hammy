@@ -16,6 +16,7 @@ import {
   WETH_ADDRESS,
 } from "@/lib/constants";
 import type { TokenData } from "@/types/token";
+import { sortTokens } from "@/lib/utils/sort-tokens";
 
 // Fix JSON bigint encoding
 if (typeof BigInt !== "undefined") {
@@ -355,42 +356,6 @@ export function useGasEstimate(
     willSucceed: data?.success || false,
   };
 }
-
-// Add this helper function at the top of the file
-function sortTokens(
-  tokenA: TokenData,
-  tokenB: TokenData,
-  amountA: string,
-  amountB: string,
-): {
-  token0: TokenData;
-  token1: TokenData;
-  amount0: string;
-  amount1: string;
-} {
-  // For ETH pairs, ETH is always considered as WETH for sorting
-  const addressA =
-    tokenA.address === zeroAddress ? WETH_ADDRESS : tokenA.address;
-  const addressB =
-    tokenB.address === zeroAddress ? WETH_ADDRESS : tokenB.address;
-
-  if (BigInt(addressA) < BigInt(addressB)) {
-    return {
-      token0: tokenA,
-      token1: tokenB,
-      amount0: amountA,
-      amount1: amountB,
-    };
-  } else {
-    return {
-      token0: tokenB,
-      token1: tokenA,
-      amount0: amountB,
-      amount1: amountA,
-    };
-  }
-}
-
 // Updated Add Liquidity Gas Estimate
 export function useAddLiquidityGasEstimate(
   tokenA: TokenData | undefined,
@@ -455,6 +420,10 @@ export function useAddLiquidityGasEstimate(
         amountA,
         amountB,
       );
+
+      if (!token0 || !token1 || !amount0 || !amount1) {
+        return null;
+      }
 
       const parsedAmount0 = parseUnits(amount0, token0.decimals);
       const parsedAmount1 = parseUnits(amount1, token1.decimals);
@@ -671,8 +640,8 @@ export function useRemoveLiquidityGasEstimate(
         abi: UNISWAP_V2_ROUTER_ABI,
         functionName: "removeLiquidity",
         args: [
-          token0.address as Address,
-          token1.address as Address,
+          token0?.address as Address,
+          token1?.address as Address,
           parsedLpAmount,
           0n, // Accept any amount of token0
           0n, // Accept any amount of token1
