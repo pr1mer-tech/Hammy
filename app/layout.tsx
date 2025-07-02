@@ -10,33 +10,33 @@ import "@/app/globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-	title: "Hammy Swap",
-	description: "An XRPL EVM decentrlaized exchange based on Uniswap V2",
+  title: "Hammy Swap",
+  description: "An XRPL EVM decentrlaized exchange based on Uniswap V2",
 };
 
 export default function RootLayout({
-	children,
+  children,
 }: {
-	children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-	return (
-		<html lang="en" suppressHydrationWarning>
-			<body className={`${inter.className} gradient-bg min-h-screen`}>
-				{/* <Providers> */}
-				<PostHogProvider>
-					<div className="flex flex-col min-h-screen">
-						{/* <Header /> */}
-						<main className="flex-1 mx-auto w-full px-0 py-6">
-							{children}
-						</main>
-						<Footer />
-					</div>
-				</PostHogProvider>
-				{/* </Providers> */}
-				<Toaster richColors />
-			</body>
-		</html>
-	);
+  return (
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.className} gradient-bg min-h-screen`}>
+        <Providers>
+          <PostHogProvider>
+            <div className="flex flex-col min-h-screen">
+              <Header />
+              <main className="flex-1 mx-auto w-full px-0 py-6">
+                {children}
+              </main>
+              <Footer />
+            </div>
+          </PostHogProvider>
+        </Providers>
+        <Toaster richColors />
+      </body>
+    </html>
+  );
 }
 
 import "./globals.css";
