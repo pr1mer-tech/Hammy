@@ -114,7 +114,7 @@ function TokenRow({ token, selectedToken, onSelect }: TokenRowProps) {
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setIsVisible(entry.isIntersecting);
+        if (!isVisible) setIsVisible(entry.isIntersecting);
       },
       {
         root: null,
@@ -132,7 +132,7 @@ function TokenRow({ token, selectedToken, onSelect }: TokenRowProps) {
         observer.unobserve(rowRef.current);
       }
     };
-  }, []);
+  }, [isVisible]);
 
   // Only fetch balance when visible and user is connected
   const {
