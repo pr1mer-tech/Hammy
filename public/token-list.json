@@ -97,38 +97,6 @@
       "symbol": "FDUSD",
       "logoURI": "https://assets.coingecko.com/coins/images/31079/standard/FDUSD_icon_black.png",
       "decimals": 18
-    },
-    {
-      "chainId": 1440000,
-      "address": "0x3d7189B6e6Fe13A17880FE2B42de1E6C1E329E23",
-      "name": "Osmosis",
-      "symbol": "OSMO",
-      "logoURI": "https://assets.coingecko.com/coins/images/16724/standard/osmo.png",
-      "decimals": 18
-    },
-    {
-      "chainId": 1440000,
-      "address": "0xDDF7e0b30A631076cD80bc12A48C0e95404b4A41",
-      "name": "USD Coin (Noble)",
-      "symbol": "USDC",
-      "logoURI": "https://assets.coingecko.com/coins/images/6319/standard/usdc.png",
-      "decimals": 6
-    },
-    {
-      "chainId": 1440000,
-      "address": "0x55A7Fc91A3Bf505b0136d84A21A875ABD1987D0e",
-      "name": "Elys",
-      "symbol": "ELYS",
-      "logoURI": "https://assets.coingecko.com/coins/images/35347/standard/elys_gradient200.png",
-      "decimals": 18
-    },
-    {
-      "chainId": 1440000,
-      "address": "0x81F090B51f67e0A6afdC8d9347516dB519712c2f",
-      "name": "Injective",
-      "symbol": "INJ",
-      "logoURI": "https://assets.coingecko.com/coins/images/12882/standard/Secondary_Symbol.png",
-      "decimals": 18
     }
   ]
 }
