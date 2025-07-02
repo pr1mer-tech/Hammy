@@ -1,46 +1,134 @@
 {
-	"name": "XRPL EVM Testnet",
-	"timestamp": "2025-03-25T19:43:53.942Z",
-	"version": {
-		"major": 13,
-		"minor": 16,
-		"patch": 0
-	},
-	"tags": {},
-	"logoURI": "ipfs://QmNa8mQkrNKp1WEEeGjFezDmDeodkWRevGFN8JCV7b4Xir",
-	"keywords": ["uniswap", "default"],
-	"tokens": [
-		{
-			"chainId": 1449000,
-			"address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-			"name": "XRP",
-			"symbol": "XRP",
-			"logoURI": "https://assets.coingecko.com/coins/images/44/standard/xrp-symbol-white-128.png",
-			"decimals": 18
-		},
-		{
-			"chainId": 1449000,
-			"address": "0x1a1C2099EC8da6B98D0b1fD93dED956FbE4ed577",
-			"name": "ETH",
-			"symbol": "ETH",
-			"logoURI": "https://assets.coingecko.com/coins/images/279/standard/ethereum.png?1696501628",
-			"decimals": 18
-		},
-		{
-			"chainId": 1449000,
-			"address": "0x925965a6FCe11D0589dAD8972e7e5B8879bCb9ef",
-			"name": "USD Coin",
-			"symbol": "USDC",
-			"logoURI": "https://assets.coingecko.com/coins/images/6319/standard/usdc.png",
-			"decimals": 18
-		},
-		{
-			"chainId": 1449000,
-			"address": "0x0f2E0FBa7161921dfa097a3550936A399b5fa09c",
-			"name": "Bitcoin",
-			"symbol": "BTC",
-			"logoURI": "https://assets.coingecko.com/coins/images/1/standard/bitcoin.png",
-			"decimals": 18
-		}
-	]
+  "name": "XRPL EVM Testnet",
+  "timestamp": "2025-03-25T19:43:53.942Z",
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "patch": 0
+  },
+  "tags": {},
+  "logoURI": "https://hammy.finance/logo.png",
+  "keywords": ["hammy", "default"],
+  "tokens": [
+    {
+      "chainId": 1449000,
+      "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+      "name": "XRP",
+      "symbol": "XRP",
+      "logoURI": "https://assets.coingecko.com/coins/images/44/standard/xrp-symbol-white-128.png",
+      "decimals": 18
+    },
+    {
+      "chainId": 1449000,
+      "address": "0x1a1C2099EC8da6B98D0b1fD93dED956FbE4ed577",
+      "name": "ETH",
+      "symbol": "ETH",
+      "logoURI": "https://assets.coingecko.com/coins/images/279/standard/ethereum.png?1696501628",
+      "decimals": 18
+    },
+    {
+      "chainId": 1449000,
+      "address": "0x925965a6FCe11D0589dAD8972e7e5B8879bCb9ef",
+      "name": "USD Coin",
+      "symbol": "USDC",
+      "logoURI": "https://assets.coingecko.com/coins/images/6319/standard/usdc.png",
+      "decimals": 18
+    },
+    {
+      "chainId": 1449000,
+      "address": "0x0f2E0FBa7161921dfa097a3550936A399b5fa09c",
+      "name": "Bitcoin",
+      "symbol": "BTC",
+      "logoURI": "https://assets.coingecko.com/coins/images/1/standard/bitcoin.png",
+      "decimals": 18
+    },
+    {
+      "chainId": 1440000,
+      "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+      "name": "XRP",
+      "symbol": "XRP",
+      "logoURI": "https://assets.coingecko.com/coins/images/44/standard/xrp-symbol-white-128.png",
+      "decimals": 18
+    },
+    {
+      "chainId": 1440000,
+      "address": "0xF8Eb4Ed0d4CF2bb707c0272F8C6827dEB6e4C0A9",
+      "name": "Wrapped Bitcoin",
+      "symbol": "WBTC",
+      "logoURI": "https://assets.coingecko.com/coins/images/7598/standard/wrapped_bitcoin_wbtc.png",
+      "decimals": 8
+    },
+    {
+      "chainId": 1440000,
+      "address": "0xa16148c6Ac9EDe0D82f0c52899e22a575284f131",
+      "name": "USD Coin",
+      "symbol": "USDC",
+      "logoURI": "https://assets.coingecko.com/coins/images/6319/standard/usdc.png",
+      "decimals": 6
+    },
+    {
+      "chainId": 1440000,
+      "address": "0x50498dC52bCd3dAeB54B7225A7d2FA8D536F313E",
+      "name": "Wrapped Ether",
+      "symbol": "WETH",
+      "logoURI": "https://assets.coingecko.com/coins/images/2518/standard/weth.png",
+      "decimals": 18
+    },
+    {
+      "chainId": 1440000,
+      "address": "0x9F8CF9c00fac501b3965872f4ed3271f6f4d06fF",
+      "name": "Tether",
+      "symbol": "USDT",
+      "logoURI": "https://assets.coingecko.com/coins/images/325/standard/Tether.png",
+      "decimals": 6
+    },
+    {
+      "chainId": 1440000,
+      "address": "0xDc556F7209C48fC53a8cDf1339c033743A7e3e75",
+      "name": "Dai Stablecoin",
+      "symbol": "DAI",
+      "logoURI": "https://assets.coingecko.com/coins/images/9956/standard/Badge_Dai.png",
+      "decimals": 18
+    },
+    {
+      "chainId": 1440000,
+      "address": "0xE5747226D2005d7f0865780E8517397de66f2a76",
+      "name": "First Digital USD",
+      "symbol": "FDUSD",
+      "logoURI": "https://assets.coingecko.com/coins/images/31079/standard/FDUSD_icon_black.png",
+      "decimals": 18
+    },
+    {
+      "chainId": 1440000,
+      "address": "0x3d7189B6e6Fe13A17880FE2B42de1E6C1E329E23",
+      "name": "Osmosis",
+      "symbol": "OSMO",
+      "logoURI": "https://assets.coingecko.com/coins/images/16724/standard/osmo.png",
+      "decimals": 18
+    },
+    {
+      "chainId": 1440000,
+      "address": "0xDDF7e0b30A631076cD80bc12A48C0e95404b4A41",
+      "name": "USD Coin (Noble)",
+      "symbol": "USDC",
+      "logoURI": "https://assets.coingecko.com/coins/images/6319/standard/usdc.png",
+      "decimals": 6
+    },
+    {
+      "chainId": 1440000,
+      "address": "0x55A7Fc91A3Bf505b0136d84A21A875ABD1987D0e",
+      "name": "Elys",
+      "symbol": "ELYS",
+      "logoURI": "https://assets.coingecko.com/coins/images/35347/standard/elys_gradient200.png",
+      "decimals": 18
+    },
+    {
+      "chainId": 1440000,
+      "address": "0x81F090B51f67e0A6afdC8d9347516dB519712c2f",
+      "name": "Injective",
+      "symbol": "INJ",
+      "logoURI": "https://assets.coingecko.com/coins/images/12882/standard/Secondary_Symbol.png",
+      "decimals": 18
+    }
+  ]
 }
