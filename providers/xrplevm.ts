@@ -9,7 +9,13 @@ export const xrplevmMainnet = /*#__PURE__*/ defineChain({
     decimals: 18,
   },
   rpcUrls: {
-    default: { http: ["https://rpc.xrplevm.org"] },
+    default: {
+      http: [
+        process.env.NEXT_PUBLIC_LOCALFORK === "true"
+          ? "http://localhost:8545"
+          : "https://rpc.xrplevm.org",
+      ],
+    },
   },
   blockExplorers: {
     default: {
