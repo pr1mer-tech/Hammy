@@ -9,34 +9,35 @@ export const sortTokens = <T>(
   amountA: T,
   amountB: T,
 ) => {
-  if (!tokenA || !tokenB)
+  if (!tokenA || !tokenB) {
     return {
       token0: undefined,
       token1: undefined,
       amount0: undefined,
       amount1: undefined,
     };
-
-  const addressA =
-    tokenA.address === zeroAddress ? WETH_ADDRESS : tokenA.address;
-  const addressB =
-    tokenB.address === zeroAddress ? WETH_ADDRESS : tokenB.address;
-
-  const isAFirst = addressA.toLowerCase() < addressB.toLowerCase();
-
-  if (isAFirst) {
-    return {
-      token0: tokenA,
-      token1: tokenB,
-      amount0: amountA,
-      amount1: amountB,
-    };
-  } else {
-    return {
-      token0: tokenB,
-      token1: tokenA,
-      amount0: amountB,
-      amount1: amountA,
-    };
   }
+
+  // Normalize addresses - handle zero address case
+  const addressA = (
+    tokenA.address === zeroAddress ? WETH_ADDRESS : tokenA.address
+  ).toLowerCase();
+  const addressB = (
+    tokenB.address === zeroAddress ? WETH_ADDRESS : tokenB.address
+  ).toLowerCase();
+
+  // Check if addresses are the same (this would be an error)
+  if (addressA === addressB) {
+    throw new Error("Cannot sort identical tokens");
+  }
+
+  // Sort by address
+  const isAFirst = addressA < addressB;
+
+  return {
+    token0: isAFirst ? tokenA : tokenB,
+    token1: isAFirst ? tokenB : tokenA,
+    amount0: isAFirst ? amountA : amountB,
+    amount1: isAFirst ? amountB : amountA,
+  };
 };

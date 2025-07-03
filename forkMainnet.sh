@@ -15,6 +15,10 @@ cast send $STABLE_TOKEN \
   1800000 \
   --unlocked &
 
+# Mint 500 ETH to the recipient account
+# 500 ETH = 500 * 10^18 wei = 0x1B1AE4D6E2EF500000 in hex
+cast rpc anvil_setBalance $RECIPIENT 0x1B1AE4D6E2EF500000 &
+
 docker run --rm -p 5100:80 --name otterscan -e ERIGON_URL="http://localhost:8545" otterscan/otterscan:latest > /dev/null &
 
 NEXT_PUBLIC_LOCALFORK=true bun dev

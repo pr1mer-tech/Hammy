@@ -18,9 +18,8 @@ import {
   UNISWAP_V2_ROUTER_ABI,
   ERC20_ABI,
   UNISWAP_V2_PAIR_ABI,
-  WETH_ADDRESS,
 } from "@/lib/constants";
-import { Address, erc20Abi, formatUnits, parseUnits, zeroAddress } from "viem";
+import { Address, erc20Abi, formatUnits, zeroAddress } from "viem";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import Image from "next/image";
@@ -49,7 +48,7 @@ export function RemoveLiquidityForm({
   const { address, isConnected } = useAccount();
   const publicClient = usePublicClient();
   const { setOpen } = useModal();
-  const [lpTokenAmount, setLpTokenAmount] = useState("0");
+  const [lpTokenAmountBigInt, setLpTokenAmountBigInt] = useState<bigint>(0n);
   const [lpTokenPercentage, setLpTokenPercentage] = useState(100);
   const [isRemovingLiquidity, setIsRemovingLiquidity] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
@@ -98,6 +97,16 @@ export function RemoveLiquidityForm({
     },
   });
 
+  // Get LP token decimals
+  const { data: lpDecimals } = useReadContract({
+    address: pairAddress as `0x${string}`,
+    abi: erc20Abi,
+    functionName: "decimals",
+    query: {
+      enabled: !!pairAddress && pairAddress !== zeroAddress,
+    },
+  });
+
   // Get LP token allowance
   const { data: lpAllowance, refetch: refetchLpAllowance } = useReadContract({
     address: pairAddress as `0x${string}`,
@@ -143,36 +152,40 @@ export function RemoveLiquidityForm({
   const [needsApproval, setNeedsApproval] = useState(false);
 
   useEffect(() => {
-    if (lpAllowance && lpTokenAmount) {
-      const parsedLpAmount = parseUnits(lpTokenAmount, 18);
-      setNeedsApproval(BigInt(lpAllowance.toString() || "0") < parsedLpAmount);
-    } else if (lpTokenAmount && Number.parseFloat(lpTokenAmount) > 0) {
+    if (lpAllowance && lpTokenAmountBigInt > 0n) {
+      const allowanceBigInt = BigInt(lpAllowance.toString() || "0");
+      setNeedsApproval(allowanceBigInt < lpTokenAmountBigInt);
+    } else if (lpTokenAmountBigInt > 0n) {
       // If we have an amount but no allowance data yet, assume approval is needed
       setNeedsApproval(true);
     } else {
       setNeedsApproval(false);
     }
-  }, [lpAllowance, lpTokenAmount]);
+  }, [lpAllowance, lpTokenAmountBigInt]);
 
   // Use the gas estimate hook
   const queryClient = useQueryClient();
+  const decimals = lpDecimals || 18;
+  const lpTokenAmountFormatted = formatUnits(lpTokenAmountBigInt, decimals);
   const { gasEstimate, isLoading: isGasEstimateLoading } =
     useRemoveLiquidityGasEstimate(
       tokenA,
       tokenB,
-      lpTokenAmount,
+      lpTokenAmountFormatted,
       pairAddress as `0x${string}`,
     );
 
-  // Update LP token amount based on percentage
+  // Update LP token amount based on percentage using bigint arithmetic
   useEffect(() => {
-    if (lpBalance) {
-      const totalLpBalance = formatUnits(BigInt(lpBalance.toString()), 18);
-      const amount =
-        (Number.parseFloat(totalLpBalance) * lpTokenPercentage) / 100;
-      setLpTokenAmount(amount.toFixed(6));
+    if (lpBalance && lpDecimals !== undefined) {
+      const balanceBigInt = BigInt(lpBalance.toString());
+      const percentageBigInt = BigInt(lpTokenPercentage);
+
+      // Calculate amount = (balance * percentage) / 100
+      const amountBigInt = (balanceBigInt * percentageBigInt) / 100n;
+      setLpTokenAmountBigInt(amountBigInt);
     }
-  }, [lpBalance, lpTokenPercentage]);
+  }, [lpBalance, lpTokenPercentage, lpDecimals]);
 
   // Handle approving LP tokens
   const _handleApprove = async () => {
@@ -182,13 +195,11 @@ export function RemoveLiquidityForm({
     onError(null);
 
     try {
-      const parsedLpAmount = parseUnits(lpTokenAmount, 18);
-
       const txHash = await writeContract({
         address: pairAddress as `0x${string}`,
         abi: ERC20_ABI,
         functionName: "approve",
-        args: [UNISWAP_V2_ROUTER, parsedLpAmount],
+        args: [UNISWAP_V2_ROUTER, lpTokenAmountBigInt],
       });
 
       // Wait for transaction receipt before refetching
@@ -238,35 +249,32 @@ export function RemoveLiquidityForm({
 
     try {
       const deadline = BigInt(Math.floor(Date.now() / 1000) + 60 * 20); // 20 minutes
-      const slippageFactor = 0.995; // 0.5% slippage
       const [reserve0, reserve1] = reserves;
+      const totalSupplyBigInt = BigInt(totalSupply.toString());
 
-      // Parse LP token amount
-      const parsedLpAmount = parseUnits(lpTokenAmount, 18);
-
-      // Calculate minimum amounts based on reserves and LP token share
-      const lpShare = Number(parsedLpAmount) / Number(totalSupply);
-
+      // Calculate minimum amounts based on reserves and LP token share using bigint arithmetic
       const sorted = sortTokens(tokenA, tokenB, 0n, 0n);
       const isTokenAToken0 =
         sorted.token0?.address.toLowerCase() === tokenA?.address?.toLowerCase();
 
-      // Calculate expected output amounts
+      // Calculate expected output amounts using bigint arithmetic
+      // expectedAmount = (reserve * lpTokenAmount) / totalSupply
       const expectedAmountA = isTokenAToken0
-        ? BigInt(Math.floor(Number(reserve0) * lpShare))
-        : BigInt(Math.floor(Number(reserve1) * lpShare));
+        ? (BigInt(reserve0.toString()) * lpTokenAmountBigInt) /
+          totalSupplyBigInt
+        : (BigInt(reserve1.toString()) * lpTokenAmountBigInt) /
+          totalSupplyBigInt;
 
       const expectedAmountB = isTokenAToken0
-        ? BigInt(Math.floor(Number(reserve1) * lpShare))
-        : BigInt(Math.floor(Number(reserve0) * lpShare));
+        ? (BigInt(reserve1.toString()) * lpTokenAmountBigInt) /
+          totalSupplyBigInt
+        : (BigInt(reserve0.toString()) * lpTokenAmountBigInt) /
+          totalSupplyBigInt;
 
-      // Apply slippage to get minimum amounts
-      const amountAMin = BigInt(
-        Math.floor(Number(expectedAmountA) * slippageFactor),
-      );
-      const amountBMin = BigInt(
-        Math.floor(Number(expectedAmountB) * slippageFactor),
-      );
+      // Apply 0.5% slippage using bigint arithmetic
+      // minAmount = expectedAmount * 995 / 1000
+      const amountAMin = (expectedAmountA * 995n) / 1000n;
+      const amountBMin = (expectedAmountB * 995n) / 1000n;
 
       // XRP + Token
       let txHash: `0x${string}`;
@@ -283,7 +291,7 @@ export function RemoveLiquidityForm({
           functionName: "removeLiquidityETH",
           args: [
             token?.address ?? zeroAddress,
-            parsedLpAmount,
+            lpTokenAmountBigInt,
             tokenMin, // amountTokenMin (with slippage)
             xrpMin, // amountXRPMin (with slippage)
             address,
@@ -300,7 +308,7 @@ export function RemoveLiquidityForm({
           args: [
             tokenA?.address ?? zeroAddress,
             tokenB?.address ?? zeroAddress,
-            parsedLpAmount,
+            lpTokenAmountBigInt,
             amountAMin, // amountAMin (with slippage)
             amountBMin, // amountBMin (with slippage)
             address,
@@ -408,7 +416,8 @@ export function RemoveLiquidityForm({
               </div>
               <div className="text-right">
                 <div className="text-amber-800 font-medium">
-                  {formatUnits(BigInt(lpBalance.toString()), 18)} LP Tokens
+                  {formatUnits(BigInt(lpBalance.toString()), decimals)} LP
+                  Tokens
                 </div>
               </div>
             </div>
@@ -429,7 +438,7 @@ export function RemoveLiquidityForm({
               onValueChange={(value) => setLpTokenPercentage(value[0])}
             />
             <div className="text-sm text-right text-amber-700">
-              {lpTokenAmount} LP Tokens
+              {formatUnits(lpTokenAmountBigInt, decimals)} LP Tokens
             </div>
           </div>
 
